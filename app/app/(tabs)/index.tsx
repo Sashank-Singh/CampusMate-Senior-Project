@@ -1,70 +1,86 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+// app/(tabs)/index.tsx
+import React from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Pressable } from 'react-native';
+import { router } from 'expo-router';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const HomeScreen = () => {
+  const quickLinks = [
+    { id: '1', title: 'University Website', url: 'https://www.csuohio.edu' },
+    { id: '2', title: 'Student Portal', url: 'https://mycsu.csuohio.edu' },
+    { id: '3', title: 'Campus Events', url: 'https://www.csuohio.edu/events' },
+    { id: '4', title: 'Library', url: 'https://library.csuohio.edu' },
+  ];
 
-export default function HomeScreen() {
+  const handleLinkPress = (url: string) => {
+    router.push({
+      pathname: "/webview",
+      params: { url }
+    });
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.header}>Welcome to CampusMate</Text>
+      <Text style={styles.subHeader}>Cleveland State University</Text>
+      <Text style={styles.description}>
+        Your one-stop app for all things CSU. Stay updated with news, events, and resources.
+      </Text>
+      <Text style={styles.quickLinksHeader}>Quick Links</Text>
+      <FlatList
+        data={quickLinks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Pressable onPress={() => handleLinkPress(item.url)}>
+            <View style={styles.linkItem}>
+              <Text style={styles.linkText}>{item.title}</Text>
+            </View>
+          </Pressable>
+        )}
+      />
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#F5F5F5',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#4CAF50',
+    marginTop: 40,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subHeader: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginBottom: 20,
+    color: '#333',
+  },
+  description: {
+    fontSize: 16,
+    marginBottom: 20,
+    color: '#666',
+  },
+  quickLinksHeader: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#4CAF50',
+  },
+  linkItem: {
+    padding: 15,
+    marginVertical: 5,
+    backgroundColor: '#E1BEE7',
+    borderRadius: 10,
+  },
+  linkText: {
+    fontSize: 18,
+    color: '#000',
   },
 });
+
+export default HomeScreen;
