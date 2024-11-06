@@ -5,7 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 const ProfileScreen = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Profile Screen</Text>
+      <Text style={styles.header}>Profile Screen</Text>
     </View>
   );
 };
@@ -16,8 +16,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {
+  header: {
     fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

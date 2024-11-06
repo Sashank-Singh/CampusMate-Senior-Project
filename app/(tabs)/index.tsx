@@ -1,58 +1,64 @@
 // app/(tabs)/index.tsx
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking } from 'react-native';
+
+interface QuickLink {
+  id: string;
+  title: string;
+  url: string;
+}
 
 const HomeScreen = () => {
-  const quickLinks = [
+  const quickLinks: QuickLink[] = [
     { id: '1', title: 'University Website', url: 'https://www.csuohio.edu' },
     { id: '2', title: 'Student Portal', url: 'https://mycsu.csuohio.edu' },
-    { id: '3', title: 'Campus Events', url: 'https://www.csuohio.edu/events' },
+    { id: '3', title: 'Campus Events', url: 'https://csuohio.presence.io/events' },
     { id: '4', title: 'Library', url: 'https://library.csuohio.edu' },
   ];
 
   const handleLinkPress = (url: string) => {
-    router.push({
-      pathname: "/webview",
-      params: { url }
-    });
+    Linking.openURL(url).catch(err => console.error("Failed to open URL:", err));
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Welcome to CampusMate</Text>
-      <Text style={styles.subHeader}>Cleveland State University</Text>
-      <Text style={styles.description}>
-        Your one-stop app for all things CSU. Stay updated with news, events, and resources.
-      </Text>
-      <Text style={styles.quickLinksHeader}>Quick Links</Text>
-      <FlatList
-        data={quickLinks}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => handleLinkPress(item.url)}>
+    <ScrollView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.header}>Welcome to CampusMate</Text>
+        <Text style={styles.subHeader}>Cleveland State University</Text>
+        <Text style={styles.description}>
+          Your one-stop app for all things CSU. Stay updated with news, events, and resources.
+        </Text>
+        <Text style={styles.quickLinksHeader}>Quick Links</Text>
+        
+        {quickLinks.map((link) => (
+          <Pressable
+            key={link.id}
+            onPress={() => handleLinkPress(link.url)}
+          >
             <View style={styles.linkItem}>
-              <Text style={styles.linkText}>{item.title}</Text>
+              <Text style={styles.linkText}>{link.title}</Text>
             </View>
           </Pressable>
-        )}
-      />
-    </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#F5F5F5',
+  },
+  content: {
+    padding: 20,
   },
   header: {
     fontSize: 32,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#4CAF50',
-    marginTop: 40,
+    marginTop: 1,
   },
   subHeader: {
     fontSize: 24,
