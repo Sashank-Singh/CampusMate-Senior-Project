@@ -19,19 +19,16 @@ To get started with the CampusMate app, follow these steps:
 - Expo CLI (install globally using `npm install -g expo-cli`)
 - A mobile device or emulator for testing
 
+# CampusMate
+
+## Getting Started
+
 ### Clone the Repository
-
-'''bash
-
-git clone https://github.com/yourusername/CampusMate.git
-cd CampusMate
-
-'''bash
-yarn install
-
-
-'''bash
-yarn start
+Run the following commands in your terminal:
+- git clone https://github.com/Sashank-Singh/CampusMate-Senior-Project
+- cd app
+- yarn install
+- yarn start
 
 
 This will start the Expo development server and open a new tab in your default web browser. You can scan the QR code with the Expo Go app on your mobile device to run the app.
