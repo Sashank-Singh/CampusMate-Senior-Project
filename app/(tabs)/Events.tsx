@@ -1,4 +1,3 @@
-// app/(tabs)/Events.tsx
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 
@@ -10,10 +9,12 @@ const events = [
 ];
 
 const EventsScreen = () => {
-  const renderEvent = ({ item }: { item: { title: string; date: string; location: string } }) => (
+  const renderEvent = ({ item }) => (
     <TouchableOpacity style={styles.eventCard}>
       <Text style={styles.eventTitle}>{item.title}</Text>
-      <Text style={styles.eventDetails}>{item.date} - {item.location}</Text>
+      <Text style={styles.eventDetails}>
+        {item.date} - {item.location}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -22,9 +23,9 @@ const EventsScreen = () => {
       <Text style={styles.header}>Upcoming Events</Text>
       <FlatList
         data={events}
+        keyExtractor={(item) => item.id} // Ensure IDs are unique and properly used
         renderItem={renderEvent}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+        ListEmptyComponent={<Text style={styles.emptyText}>No events available.</Text>}
       />
     </View>
   );
@@ -34,36 +35,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    padding: 16,
   },
   header: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginVertical: 20,
+    marginBottom: 20,
     color: '#333',
-  },
-  list: {
-    paddingHorizontal: 16,
   },
   eventCard: {
     backgroundColor: '#ffffff',
     padding: 16,
-    marginVertical: 8,
+    marginBottom: 12,
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   eventTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#444',
+    color: '#222',
   },
   eventDetails: {
     fontSize: 14,
-    color: '#666',
+    color: '#555',
     marginTop: 4,
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#999',
+    marginTop: 20,
   },
 });
 
