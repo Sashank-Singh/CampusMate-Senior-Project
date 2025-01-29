@@ -1,10 +1,11 @@
 // app/(tabs)/index.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Modal, SafeAreaView, TouchableOpacity } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 
 interface QuickLink {
   id: string;
@@ -13,8 +14,65 @@ interface QuickLink {
   icon: string;
 }
 
+interface WeatherData {
+  temp: number;
+  description: string;
+  isDay: boolean;
+}
+
 const HomeScreen = () => {
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Cleveland coordinates
+        const lat = 41.4993;
+        const lon = -81.6944;
+        
+        const response = await axios.get(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code&temperature_unit=fahrenheit`
+        );
+
+        // Convert weather code to description
+        const getWeatherDescription = (code: number) => {
+          const weatherCodes: { [key: number]: string } = {
+            0: 'Clear sky',
+            1: 'Mainly clear',
+            2: 'Partly cloudy',
+            3: 'Overcast',
+            45: 'Foggy',
+            48: 'Depositing rime fog',
+            51: 'Light drizzle',
+            53: 'Moderate drizzle',
+            55: 'Dense drizzle',
+            61: 'Slight rain',
+            63: 'Moderate rain',
+            65: 'Heavy rain',
+            71: 'Slight snow',
+            73: 'Moderate snow',
+            75: 'Heavy snow',
+            95: 'Thunderstorm',
+          };
+          return weatherCodes[code] || 'Unknown';
+        };
+        
+        setWeather({
+          temp: Math.round(response.data.current.temperature_2m),
+          description: getWeatherDescription(response.data.current.weather_code),
+          isDay: response.data.current.is_day === 1
+        });
+      } catch (error) {
+        console.error('Error fetching weather:', error);
+      }
+    };
+
+    fetchWeather();
+    // Refresh weather every 30 minutes
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const quickLinks: QuickLink[] = [
     
@@ -59,9 +117,17 @@ const HomeScreen = () => {
         </View>
 
         <View style={styles.weatherWidget}>
-          <Ionicons name="partly-sunny" size={32} color="#FFA000" />
-          <Text style={styles.temperature}>54°F</Text>
-          <Text style={styles.weatherDesc}>Partly Cloudy</Text>
+          <Ionicons 
+            name={weather?.isDay ? 'partly-sunny' : 'moon'} 
+            size={32} 
+            color="#FFA000" 
+          />
+          <Text style={styles.temperature}>
+            {weather ? `${weather.temp}°F` : 'Loading...'}
+          </Text>
+          <Text style={styles.weatherDesc}>
+            {weather ? weather.description : 'Loading...'}
+          </Text>
         </View>
 
         <View style={styles.quickLinksContainer}>

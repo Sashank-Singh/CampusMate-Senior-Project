@@ -1,8 +1,8 @@
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
-import { tokenCache } from '../cache'; // Make sure you've created this file
+import { tokenCache } from '../cache';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -19,21 +19,7 @@ export default function RootLayout() {
     >
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <ClerkLoaded>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen 
-              name="webview" 
-              options={{ 
-                headerShown: true,
-                title: 'Browser'
-              }} 
-            />
-            {/* Add your auth screens here or in a separate group */}
-            <Stack.Screen 
-              name="(auth)" 
-              options={{ headerShown: false }} 
-            />
-          </Stack>
+          <Slot />
         </ClerkLoaded>
       </ThemeProvider>
     </ClerkProvider>

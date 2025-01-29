@@ -11,6 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@clerk/clerk-expo": "^2.6.18",
     "@clerk/types": "^4.44.0",
     "@expo/vector-icons": "^14.0.4",
     "@react-native-community/masked-view": "^0.1.11",
@@ -21,6 +22,7 @@
     "expo-image-picker": "^15.0.7",
     "expo-linking": "^6.3.1",
     "expo-router": "^3.5.23",
+    "expo-secure-store": "^14.0.1",
     "expo-status-bar": "^1.12.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
