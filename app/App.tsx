@@ -9,7 +9,8 @@ import ExploreScreen from "./(tabs)/explore";
 import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Events";
 import ProfileScreen from "./(tabs)/Profile";
-import HomeScreen from "./(tabs)/Home";
+
+import HomeScreen from "./(tabs)/index"
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

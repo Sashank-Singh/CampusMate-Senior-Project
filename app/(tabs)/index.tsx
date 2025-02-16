@@ -30,7 +30,7 @@ const HomeScreen = () => {
         // Cleveland coordinates
         const lat = 41.4993;
         const lon = -81.6944;
-        
+      
         const response = await axios.get(
           `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,is_day,weather_code&temperature_unit=fahrenheit`
         );
@@ -57,7 +57,7 @@ const HomeScreen = () => {
           };
           return weatherCodes[code] || 'Unknown';
         };
-        
+      
         setWeather({
           temp: Math.round(response.data.current.temperature_2m),
           description: getWeatherDescription(response.data.current.weather_code),
@@ -69,13 +69,11 @@ const HomeScreen = () => {
     };
 
     fetchWeather();
-    // Refresh weather every 30 minutes
     const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   const quickLinks: QuickLink[] = [
-    
     { id: '1', title: 'University Website', url: 'https://www.csuohio.edu', icon: 'school' },
     { id: '2', title: 'Student Portal', url: 'https://mycsu.csuohio.edu', icon: 'person' },
     { id: '3', title: 'Campus Events', url: 'https://csuohio.presence.io/events', icon: 'calendar' },
@@ -84,11 +82,6 @@ const HomeScreen = () => {
 
   const handleLinkPress = (url: string) => {
     setSelectedUrl(url);
-  };
-
-  const handleFabPress = () => {
-    // Handle FAB press action here
-    console.log("FAB Pressed");
   };
 
   return (
@@ -116,18 +109,30 @@ const HomeScreen = () => {
           </View>
         </View>
 
-        <View style={styles.weatherWidget}>
-          <Ionicons 
-            name={weather?.isDay ? 'partly-sunny' : 'moon'} 
-            size={32} 
-            color="#FFA000" 
-          />
-          <Text style={styles.temperature}>
-            {weather ? `${weather.temp}°F` : 'Loading...'}
-          </Text>
-          <Text style={styles.weatherDesc}>
-            {weather ? weather.description : 'Loading...'}
-          </Text>
+        {/* Weather and News Row */}
+        <View style={styles.widgetRow}>
+          {/* Weather Widget */}
+          <View style={styles.weatherWidget}>
+            <Ionicons 
+              name={weather?.isDay ? 'partly-sunny' : 'moon'} 
+              size={32} 
+              color="#FFA000" 
+            />
+            <Text style={styles.temperature}>
+              {weather ? `${weather.temp}°F` : 'Loading...'}
+            </Text>
+            <Text style={styles.weatherDesc}>
+              {weather ? weather.description : 'Loading...'}
+            </Text>
+          </View>
+
+          {/* News Button */}
+          <TouchableOpacity style={styles.newsButton}>
+            <View style={styles.newsIconContainer}>
+              <Ionicons name="globe-outline" size={24} color="#FFFFFF" />
+              <Text style={styles.newsText}>NEWS</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.quickLinksContainer}>
@@ -147,6 +152,22 @@ const HomeScreen = () => {
               </LinearGradient>
             </Pressable>
           ))}
+        </View>
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="map-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="restaurant-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="bus-outline" size={24} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Text style={styles.vikingText}>VIKING</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -188,10 +209,6 @@ const HomeScreen = () => {
           )}
         </SafeAreaView>
       </Modal>
-
-      <TouchableOpacity style={styles.fab} onPress={handleFabPress}>
-        <Ionicons name="add" size={24} color="#ffffff" />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -298,17 +315,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#4CAF50',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  bottomNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  navItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
+    padding: 12,
+  },
+  vikingText: {
+    color: '#006400',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   statusCard: {
     margin: 16,
@@ -337,13 +366,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#424242',
   },
+  widgetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
   weatherWidget: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 16,
-    margin: 16,
+    marginRight: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  newsButton: {
+    backgroundColor: '#2B60DE',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  newsIconContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  newsText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: 8,
   },
   temperature: {
     fontSize: 24,
