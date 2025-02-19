@@ -1,139 +1,259 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
 } from "react-native";
 
-const EventsScreen = () => {
-  interface Event {
-    id: string;
+// Import local images
+const eventImages = {
+  tech_summit: require("../assets/images/suffle1.jpg"),
+  health_expo: require("../assets/images/suffle2.jpg"),
+  business_forum: require("../assets/images/suffle3.jpg"),
+  environment_summit: require("../assets/images/logo.png"),
+};
+
+type Tab = "ongoing" | "upcoming";
+
+const MobilePreview = () => {
+  const [activeTab, setActiveTab] = useState<Tab>("ongoing");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<{
+    id: number;
     title: string;
-    details: string;
-  }
+    date: string;
+    time: string;
+    location: string;
+    description: string;
+    category: string;
+    attendees: number;
+    tags: string[];
+    image: any;
+  } | null>(null);
 
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const events: {
+    [key in Tab]: {
+      id: number;
+      title: string;
+      date: string;
+      time: string;
+      location: string;
+      description: string;
+      category: string;
+      attendees: number;
+      tags: string[];
+      image: any;
+    }[];
+  } = {
+    ongoing: [
+      {
+        id: 1,
+        title: "Tech Innovation Summit 2025",
+        date: "Feb 17 - Feb 20, 2025",
+        time: "9:00 AM - 5:00 PM",
+        location: "Innovation Hub",
+        description:
+          "Join industry leaders in exploring cutting-edge technologies.",
+        category: "Technology",
+        attendees: 450,
+        tags: ["AI", "Blockchain", "IoT"],
+        image: eventImages.tech_summit,
+      },
+      {
+        id: 2,
+        title: "Health & Wellness Expo",
+        date: "Feb 22, 2025",
+        time: "10:00 AM - 6:00 PM",
+        location: "City Convention Center",
+        description:
+          "Discover the latest in health, fitness, and wellness trends.",
+        category: "Health",
+        attendees: 600,
+        tags: ["Fitness", "Nutrition", "Mental Health"],
+        image: eventImages.health_expo,
+      },
+    ],
+    upcoming: [
+      {
+        id: 3,
+        title: "Global Business Forum",
+        date: "Mar 1, 2025",
+        time: "10:00 AM - 4:00 PM",
+        location: "Business Center",
+        description:
+          "Connect with industry leaders and explore new opportunities.",
+        category: "Business",
+        attendees: 300,
+        tags: ["Networking", "Business", "Career"],
+        image: eventImages.business_forum,
+      },
+      {
+        id: 4,
+        title: "Environmental Sustainability Summit",
+        date: "Mar 10, 2025",
+        time: "9:00 AM - 3:00 PM",
+        location: "Green Future Hall",
+        description:
+          "Learn about sustainable practices and innovative eco-friendly solutions.",
+        category: "Environment",
+        attendees: 350,
+        tags: ["Sustainability", "Climate Change", "Eco-Friendly"],
+        image: eventImages.environment_summit,
+      },
+    ],
+  };
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await fetch("https://csuohio.presence.io/events");
-        const text = await response.text(); // Get raw response as text
-        console.log(text); // Log the response to inspect it
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        // If the response is JSON, parse it
-        if (
-          response.headers.get("content-type")?.includes("application/json")
-        ) {
-          const data = JSON.parse(text);
-
-          // Check if API returns an array or wrapped data
-          if (Array.isArray(data)) {
-            setEvents(data);
-          } else if (data.events && Array.isArray(data.events)) {
-            setEvents(data.events);
-          } else {
-            throw new Error(
-              "Unexpected response structure. Check the API response."
-            );
-          }
-        } else {
-          throw new Error("Invalid response format. Expected JSON.");
-        }
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "An unexpected error occurred."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading events...</Text>
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-      </View>
-    );
-  }
+  const openModal = (event: any) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
 
   return (
-    <View style={styles.container}>
-      {events.length === 0 ? (
-        <Text style={styles.noEventsText}>No events found.</Text>
-      ) : (
-        <FlatList
-          data={events}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.eventCard}>
-              <Text style={styles.eventTitle}>{item.title || "No Title"}</Text>
-              <Text style={styles.eventDetails}>
-                {item.details || "No Details Available"}
-              </Text>
-            </View>
-          )}
-        />
-      )}
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
+      {/* Header */}
+      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
+        Events
+      </Text>
+
+      {/* Search Bar */}
+      <View
+        style={{
+          backgroundColor: "#e0e0e0",
+          borderRadius: 20,
+          padding: 10,
+          marginBottom: 16,
+        }}
+      >
+        <TextInput placeholder="Search events..." style={{ fontSize: 16 }} />
+      </View>
+
+      {/* Tabs */}
+      <View style={{ flexDirection: "row", marginBottom: 16 }}>
+        {["ongoing", "upcoming"].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => setActiveTab(tab as Tab)}
+            style={{
+              flex: 1,
+              paddingVertical: 10,
+              borderRadius: 20,
+              backgroundColor: activeTab === tab ? "darkgreen" : "#e0e0e0",
+              alignItems: "center",
+              marginHorizontal: 5,
+            }}
+          >
+            <Text style={{ color: activeTab === tab ? "#fff" : "#000" }}>
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Event List */}
+      <ScrollView>
+        {events[activeTab].map((event) => (
+          <TouchableOpacity
+            key={event.id}
+            onPress={() => openModal(event)}
+            style={{
+              backgroundColor: "white",
+              borderRadius: 10,
+              padding: 16,
+              marginBottom: 16,
+            }}
+          >
+            {/* Event Image */}
+            <Image
+              source={event.image}
+              style={{ width: "100%", height: 150, borderRadius: 10 }}
+              resizeMode="cover"
+            />
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
+              {event.title}
+            </Text>
+            <Text>
+              {event.date} - {event.time}
+            </Text>
+            <Text>📍 {event.location}</Text>
+            <Text>👥 {event.attendees} attending</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Event Details Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              padding: 20,
+              borderRadius: 10,
+              width: "100%",
+              maxWidth: 400,
+            }}
+          >
+            {selectedEvent && (
+              <>
+                <Image
+                  source={selectedEvent.image}
+                  style={{ width: "100%", height: 200, borderRadius: 10 }}
+                  resizeMode="cover"
+                />
+                <Text
+                  style={{ fontSize: 22, fontWeight: "bold", marginTop: 10 }}
+                >
+                  {selectedEvent.title}
+                </Text>
+                <Text style={{ fontSize: 16, marginVertical: 5 }}>
+                  📅 {selectedEvent.date} | ⏰ {selectedEvent.time}
+                </Text>
+                <Text style={{ fontSize: 16 }}>
+                  📍 {selectedEvent.location}
+                </Text>
+                <Text style={{ marginVertical: 10 }}>
+                  {selectedEvent.description}
+                </Text>
+                <Text style={{ fontWeight: "bold" }}>Category:</Text>
+                <Text>{selectedEvent.category}</Text>
+                <Text style={{ fontWeight: "bold", marginTop: 10 }}>Tags:</Text>
+                <Text>{selectedEvent.tags.join(", ")}</Text>
+                <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+                  Attendees:
+                </Text>
+                <Text>👥 {selectedEvent.attendees}</Text>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={{
+                    marginTop: 20,
+                    backgroundColor: "darkgreen",
+                    padding: 10,
+                    borderRadius: 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: "white", fontWeight: "bold" }}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#f9f9f9",
-  },
-  eventCard: {
-    backgroundColor: "#fff",
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  eventDetails: {
-    fontSize: 14,
-    color: "#555",
-  },
-  errorText: {
-    color: "red",
-    fontSize: 16,
-  },
-  noEventsText: {
-    textAlign: "center",
-    marginTop: 20,
-    fontSize: 16,
-  },
-});
-
-export default EventsScreen;
+export default MobilePreview;
