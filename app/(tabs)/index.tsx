@@ -129,7 +129,7 @@ const HomeScreen = () => {
           {/* News Button */}
           <TouchableOpacity
             style={styles.newsButton}
-            onPress={() => setSelectedUrl("https://www.cleveland.com/")}
+            onPress={() => setSelectedUrl("https://www.cleveland.com/#section__top_stories/")}
           >
             <View style={styles.newsIconContainer}>
               <Ionicons name="globe-outline" size={24} color="#FFFFFF" />
