@@ -127,7 +127,10 @@ const HomeScreen = () => {
           </View>
 
           {/* News Button */}
-          <TouchableOpacity style={styles.newsButton}>
+          <TouchableOpacity
+            style={styles.newsButton}
+            onPress={() => setSelectedUrl("https://www.cleveland.com/")}
+          >
             <View style={styles.newsIconContainer}>
               <Ionicons name="globe-outline" size={24} color="#FFFFFF" />
               <Text style={styles.newsText}>NEWS</Text>
@@ -156,13 +159,22 @@ const HomeScreen = () => {
 
         {/* Bottom Navigation */}
         <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setSelectedUrl("https://clevelandstate.university-tour.com/")}
+          >
             <Ionicons name="map-outline" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setSelectedUrl("https://vikingfoodco.campusdish.com/")}
+          >
             <Ionicons name="restaurant-outline" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setSelectedUrl("https://www.google.com/maps/dir//Cleveland+State+University,+2121+Euclid+Ave,+Cleveland,+OH+44115/@41.5027683,-81.6770033,17z/data=!4m9!4m8!1m0!1m5!1m1!1s0x8830fa63cd5f8be1:0xba9b96611d2ad6e!2m2!1d-81.674423!2d41.5027643!3e3?entry=ttu&g_ep=EgoyMDI1MDIxMi4wIKXMDSoASAFQAw%3D%3D")}
+          >
             <Ionicons name="bus-outline" size={24} color="#333" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.navItem}>

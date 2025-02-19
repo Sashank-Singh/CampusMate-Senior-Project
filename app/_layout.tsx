@@ -1,27 +1,63 @@
-import { Slot } from 'expo-router';
+// app/_layout.tsx
+import { Stack } from 'expo-router';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
-import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
-import { tokenCache } from '../cache';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-
-  if (!publishableKey) {
-    throw new Error('Missing Clerk Publishable Key');
-  }
 
   return (
-    <ClerkProvider 
-      publishableKey={publishableKey}
-      tokenCache={tokenCache}
-    >
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <ClerkLoaded>
-          <Slot />
-        </ClerkLoaded>
-      </ThemeProvider>
-    </ClerkProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen 
+          name="screens/LibraryDetails" 
+          options={{ 
+            title: 'Library',
+            headerStyle: {
+              backgroundColor: '#1B5E20',
+            },
+            headerTintColor: '#fff',
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="screens/CafeteriaDetails" 
+          options={{ 
+            title: 'Cafeteria',
+            headerStyle: {
+              backgroundColor: '#1B5E20',
+            },
+            headerTintColor: '#fff',
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="screens/GymDetails" 
+          options={{ 
+            title: 'Gym',
+            headerStyle: {
+              backgroundColor: '#1B5E20',
+            },
+            headerTintColor: '#fff',
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="screens/StudentCenterDetails" 
+          options={{ 
+            title: 'Student Center',
+            headerStyle: {
+              backgroundColor: '#1B5E20',
+            },
+            headerTintColor: '#fff',
+            presentation: 'modal'
+          }} 
+        />
+      </Stack>
+    </ThemeProvider>
   );
 }

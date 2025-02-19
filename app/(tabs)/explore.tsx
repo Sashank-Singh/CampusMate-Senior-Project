@@ -1,43 +1,10 @@
+// app/(tabs)/ExploreScreen.tsx
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-interface ExploreItem {
-  id: string;
-  title: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  description: string;
-}
-
 const ExploreScreen = () => {
-  const items: ExploreItem[] = [
-    { 
-      id: '1', 
-      title: 'Library', 
-      icon: 'library',
-      description: 'Study spaces, books, and resources'
-    },
-    { 
-      id: '2', 
-      title: 'Cafeteria', 
-      icon: 'restaurant',
-      description: 'Campus dining and meal options'
-    },
-    { 
-      id: '3', 
-      title: 'Gym', 
-      icon: 'fitness',
-      description: 'Recreation center and fitness facilities'
-    },
-    { 
-      id: '4', 
-      title: 'Student Center', 
-      icon: 'people',
-      description: 'Student services and gathering spaces'
-    },
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -54,23 +21,89 @@ const ExploreScreen = () => {
         </LinearGradient>
 
         <View style={styles.content}>
-          {items.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.card}>
-              <LinearGradient
-                colors={['#ffffff', '#f5f5f5']}
-                style={styles.cardGradient}
-              >
-                <View style={styles.iconContainer}>
-                  <Ionicons name={item.icon} size={32} color="#4CAF50" />
-                </View>
-                <View style={styles.cardContent}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={styles.cardDescription}>{item.description}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={24} color="#757575" />
-              </LinearGradient>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity  
+            style={styles.card}
+            onPress={() => {
+              // Add your navigation logic here
+            }}
+          >
+            <LinearGradient
+              colors={['#ffffff', '#f5f5f5']}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="library" size={32} color="#4CAF50" />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>Library</Text>
+                <Text style={styles.cardDescription}>Study spaces, books, and resources</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#757575" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.card}
+            onPress={() => {
+              // Add your navigation logic here
+            }}
+          >
+            <LinearGradient
+              colors={['#ffffff', '#f5f5f5']}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="restaurant" size={32} color="#4CAF50" />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>Cafeteria</Text>
+                <Text style={styles.cardDescription}>Campus dining and meal options</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#757575" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.card}
+            onPress={() => {
+              // Add your navigation logic here
+            }}
+          >
+            <LinearGradient
+              colors={['#ffffff', '#f5f5f5']}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="fitness" size={32} color="#4CAF50" />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>Gym</Text>
+                <Text style={styles.cardDescription}>Recreation center and fitness facilities</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#757575" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.card}
+            onPress={() => {
+              // Add your navigation logic here
+            }}
+          >
+            <LinearGradient
+              colors={['#ffffff', '#f5f5f5']}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="people" size={32} color="#4CAF50" />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>Student Center</Text>
+                <Text style={styles.cardDescription}>Student services and gathering spaces</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#757575" />
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
