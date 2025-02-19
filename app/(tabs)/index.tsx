@@ -11,7 +11,7 @@ interface QuickLink {
   id: string;
   title: string;
   url: string;
-  icon: string;
+  icon: 'school' | 'person' | 'calendar' | 'library';
 }
 
 interface WeatherData {
