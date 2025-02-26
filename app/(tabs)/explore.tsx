@@ -1,10 +1,100 @@
 // app/(tabs)/ExploreScreen.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import CampusLocationModal from './../components/CampusLocationModal';
+
+// Define location data
+const locationData = {
+  library: {
+    title: 'Library',
+    icon: 'library',
+    description: "The campus library is a state-of-the-art facility designed to support student learning and research. With multiple floors of study spaces, extensive collections, and digital resources, it serves as the intellectual hub of the university.",
+    details: {
+      hours: 'Monday-Friday: 7:00 AM - 12:00 AM\nSaturday-Sunday: 9:00 AM - 10:00 PM\nExtended hours during finals week',
+      location: 'Central Campus, Building 12\nNext to the Student Union',
+      amenities: [
+        'Silent study areas',
+        'Group study rooms',
+        'Computer labs',
+        'Printing services',
+        'Research assistance',
+        'Coffee shop'
+      ],
+      contact: 'Phone: (555) 123-4567\nEmail: library@university.edu'
+    }
+  },
+  cafeteria: {
+    title: 'Cafeteria',
+    icon: 'restaurant',
+    description: "Our campus cafeteria offers a diverse range of dining options to satisfy every palate. From healthy salads to comfort food, international cuisine to grab-and-go snacks, we provide nutritious and delicious meals for the entire campus community.",
+    details: {
+      hours: 'Breakfast: 7:00 AM - 10:30 AM\nLunch: 11:00 AM - 2:30 PM\nDinner: 5:00 PM - 9:00 PM\nGrab & Go: 7:00 AM - 9:00 PM',
+      location: 'North Campus, Dining Hall\nFirst floor of Residence Hall A',
+      amenities: [
+        'Multiple food stations',
+        'Vegetarian and vegan options',
+        'Allergen-free zone',
+        'Meal plan accepted',
+        'Mobile ordering',
+        'Outdoor seating area'
+      ],
+      contact: 'Phone: (555) 123-8910\nEmail: dining@university.edu'
+    }
+  },
+  gym: {
+    title: 'Gym',
+    icon: 'fitness',
+    description: "The campus recreation center features modern fitness equipment, group exercise studios, and athletic facilities to promote health and wellness. Whether you're a casual exerciser or competitive athlete, our gym has everything you need for your fitness journey.",
+    details: {
+      hours: 'Monday-Friday: 6:00 AM - 11:00 PM\nSaturday-Sunday: 8:00 AM - 9:00 PM\nPool hours may vary',
+      location: 'West Campus, Recreation Center\nAdjacent to the Athletic Fields',
+      amenities: [
+        'Cardio and weight equipment',
+        'Indoor track',
+        'Swimming pool',
+        'Basketball courts',
+        'Group fitness classes',
+        'Personal training services'
+      ],
+      contact: 'Phone: (555) 123-5678\nEmail: recreation@university.edu'
+    }
+  },
+  studentCenter: {
+    title: 'Student Center',
+    icon: 'people',
+    description: "The Student Center is the heart of campus life, offering spaces for socializing, studying, and accessing essential services. It houses student organizations, administrative offices, and various amenities to enhance your college experience.",
+    details: {
+      hours: 'Monday-Friday: 7:00 AM - 11:00 PM\nSaturday-Sunday: 9:00 AM - 10:00 PM',
+      location: 'Central Campus, Student Union Building\nBetween the Quad and Main Hall',
+      amenities: [
+        'Student organization offices',
+        'Lounge areas',
+        'Game room',
+        'Meeting spaces',
+        'Campus store',
+        'Banking services',
+        'Information desk'
+      ],
+      contact: 'Phone: (555) 123-9012\nEmail: studentcenter@university.edu'
+    }
+  }
+};
 
 const ExploreScreen = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+
+  const openModal = (location: string) => {
+    setSelectedLocation(location);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -23,9 +113,7 @@ const ExploreScreen = () => {
         <View style={styles.content}>
           <TouchableOpacity  
             style={styles.card}
-            onPress={() => {
-              // Add your navigation logic here
-            }}
+            onPress={() => openModal('library')}
           >
             <LinearGradient
               colors={['#ffffff', '#f5f5f5']}
@@ -44,9 +132,7 @@ const ExploreScreen = () => {
 
           <TouchableOpacity 
             style={styles.card}
-            onPress={() => {
-              // Add your navigation logic here
-            }}
+            onPress={() => openModal('cafeteria')}
           >
             <LinearGradient
               colors={['#ffffff', '#f5f5f5']}
@@ -65,9 +151,7 @@ const ExploreScreen = () => {
 
           <TouchableOpacity 
             style={styles.card}
-            onPress={() => {
-              // Add your navigation logic here
-            }}
+            onPress={() => openModal('gym')}
           >
             <LinearGradient
               colors={['#ffffff', '#f5f5f5']}
@@ -86,9 +170,7 @@ const ExploreScreen = () => {
 
           <TouchableOpacity 
             style={styles.card}
-            onPress={() => {
-              // Add your navigation logic here
-            }}
+            onPress={() => openModal('studentCenter')}
           >
             <LinearGradient
               colors={['#ffffff', '#f5f5f5']}
@@ -106,6 +188,13 @@ const ExploreScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Modal Component */}
+      <CampusLocationModal
+        visible={modalVisible}
+        onClose={closeModal}
+        locationInfo={selectedLocation ? locationData[selectedLocation as keyof typeof locationData] : null}
+      />
     </SafeAreaView>
   );
 };
