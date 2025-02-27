@@ -3,14 +3,14 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons"; // Import icons
+import { AppRegistry } from 'react-native';
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./Intropage";
 import ExploreScreen from "./(tabs)/explore";
 import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Events";
 import ProfileScreen from "./(tabs)/Profile";
-
-import HomeScreen from "./(tabs)/index"
+import HomeScreen from "./(tabs)/index";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -20,7 +20,7 @@ const HomeTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName:
+          let iconName: 
             | "home-outline"
             | "home"
             | "search"
@@ -32,16 +32,22 @@ const HomeTabs = () => {
             | "person"
             | "person-outline" = "home-outline"; // default value
 
-          if (route.name === "Home") {
-            iconName = focused ? "home" : "home-outline";
-          } else if (route.name === "Explore") {
-            iconName = focused ? "search" : "search-outline";
-          } else if (route.name === "Courses") {
-            iconName = focused ? "book" : "book-outline";
-          } else if (route.name === "Events") {
-            iconName = focused ? "calendar" : "calendar-outline";
-          } else if (route.name === "Profile") {
-            iconName = focused ? "person" : "person-outline";
+          switch (route.name) {
+            case "Home":
+              iconName = focused ? "home" : "home-outline";
+              break;
+            case "Explore":
+              iconName = focused ? "search" : "search-outline";
+              break;
+            case "Courses":
+              iconName = focused ? "book" : "book-outline";
+              break;
+            case "Events":
+              iconName = focused ? "calendar" : "calendar-outline";
+              break;
+            case "Profile":
+              iconName = focused ? "person" : "person-outline";
+              break;
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -83,3 +89,7 @@ const App = () => {
 };
 
 export default App;
+
+import { name as appName } from './app.json';
+
+AppRegistry.registerComponent(appName, () => App);
