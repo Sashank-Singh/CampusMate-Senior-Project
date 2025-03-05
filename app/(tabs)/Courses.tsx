@@ -16,8 +16,16 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { OPENROUTER_API_KEY } from '@env';
+import Constants from 'expo-constants';
+//import { OPENROUTER_API_KEY } from '@env';
 
+// Get API key from app.json extra or environment variables
+const OPENROUTER_API_KEY = Constants.expoConfig?.extra?.OPENROUTER_API_KEY || 
+                           "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";
+
+if (!OPENROUTER_API_KEY) {
+  throw new Error('OPENROUTER_API_KEY is not defined in the environment variables.');
+}
 
 interface Course {
   id: string;
@@ -26,12 +34,23 @@ interface Course {
   time: string;
   location: string;
   icon: keyof typeof Ionicons.glyphMap;
+  days: string[]; // Array of days this course meets (e.g., ["Monday", "Wednesday"])
 }
 
+// All possible weekdays
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
 const CoursesScreen = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [coursesByDay, setCoursesByDay] = useState<{[key: string]: Course[]}>({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: []
+  });
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [activeDay, setActiveDay] = useState<string>("Monday");
 
   const handleImagePicker = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,6 +65,7 @@ const CoursesScreen = () => {
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.8,
+      presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
 
     if (!result.canceled) {
@@ -63,23 +83,36 @@ const CoursesScreen = () => {
         encoding: FileSystem.EncodingType.Base64,
       });
       
-      // Prepare the prompt for the vision model
+      // Prepare the prompt for the vision model with emphasis on day extraction
       const prompt = `
-        You are a course schedule analyzer. Look at this university course schedule image and extract ALL the courses shown.
+        You are a university course schedule analyzer. Look at this schedule image and extract all courses shown.
+        
         For each course, extract:
         1. Course code and section number (e.g., "ENGR 1100.15 - 406")
         2. Course type (e.g., "Lecture", "Recitation", "Laboratory")
         3. Time (e.g., "10:20AM - 11:15AM")
-        4. Day of week - please infer this from the schedule layout
+        4. Days of the week when the course meets (Monday, Tuesday, Wednesday, Thursday, or Friday)
         5. Location (e.g., "Scott Lab E001")
+        
+        IMPORTANT: You must determine which days each course meets. Usually, the schedule is organized with columns representing days of the week (Monday through Friday).
         
         Format your response as a JSON array of course objects with these properties:
         - title (course code and section)
         - type (lecture/lab/recitation)
-        - time (include days and time)
+        - time (time range only, without days)
+        - days (array of weekdays the course meets, e.g. ["Monday", "Wednesday"])
         - location (building and room)
         
-        Do not include any explanatory text or other formatting. Return only valid JSON.
+        Return only valid JSON. Example format:
+        [
+          {
+            "title": "MATH 1151 - 0080",
+            "type": "Lecture", 
+            "time": "1:50PM - 2:45PM",
+            "days": ["Monday", "Wednesday", "Friday"],
+            "location": "Stillman Hall 100"
+          }
+        ]
       `;
       
       // Make request to OpenRouter API
@@ -101,7 +134,7 @@ const CoursesScreen = () => {
               ]
             }
           ],
-          max_tokens: 1024
+          max_tokens: 1500
         },
         {
           headers: {
@@ -115,42 +148,131 @@ const CoursesScreen = () => {
       // Parse the response
       const content = response.data.choices[0].message.content;
       
-      // Extract JSON from the response
+      console.log("API Response Content:", content);
+      
+      // Clean the JSON string by removing control characters
+      const cleanContent = content.replace(/[\u0000-\u001F]+/g, '');
+      
+      // Extract JSON from the cleaned response
       let jsonData;
       try {
-        // Try to parse if it's already pure JSON
-        jsonData = JSON.parse(content);
-      } catch (e) {
-        // If not pure JSON, attempt to extract JSON from text
-        const jsonMatch = content.match(/\[[\s\S]*\]/);
+        // Use regex to extract JSON array from the response
+        const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
           jsonData = JSON.parse(jsonMatch[0]);
         } else {
           throw new Error("Failed to extract JSON from response");
         }
+      } catch (e) {
+        console.error("Error parsing JSON:", e);
+        Alert.alert("Error", "Failed to extract JSON from response. Please try again.");
+        return;
       }
       
-      // Map the extracted data to our Course interface
-      const extractedCourses: Course[] = jsonData.map((item: any, index: number) => ({
-        id: `${index + 1}`,
-        title: item.title,
-        type: item.type || "",
-        time: item.time,
-        location: item.location,
-        icon: getCourseIcon(item.title)
-      }));
-      
-      setCourses(extractedCourses);
+      // Process courses and organize by day
+      organizeCoursesByDay(jsonData);
       
       Alert.alert("Success", "Schedule processed successfully!");
     } catch (error) {
-      console.error("Error processing image:", error);
-      Alert.alert(
-        "Error", 
-        "Failed to process the schedule image. Please try again."
-      );
+      console.error("API call failed:", error);
+      Alert.alert("Error", "Failed to communicate with the server. Please try again.");
     } finally {
       setIsProcessing(false);
+    }
+  };
+  
+  // Organize courses by day of the week
+  const organizeCoursesByDay = (extractedData: any[]) => {
+    const newCoursesByDay: {[key: string]: Course[]} = {
+      Monday: [],
+      Tuesday: [],
+      Wednesday: [],
+      Thursday: [],
+      Friday: []
+    };
+    
+    let courseId = 1;
+    
+    extractedData.forEach(item => {
+      // Process days array - ensure proper format
+      const days = Array.isArray(item.days) 
+        ? item.days 
+        : typeof item.days === 'string'
+          ? item.days.split(',').map((day: string) => day.trim())
+          : [];
+      
+      // Normalize day names
+      const normalizedDays = days.map((day: string) => {
+        const dayLower = day.toLowerCase();
+        if (dayLower.includes('mon')) return 'Monday';
+        if (dayLower.includes('tue')) return 'Tuesday';
+        if (dayLower.includes('wed')) return 'Wednesday';
+        if (dayLower.includes('thu')) return 'Thursday';
+        if (dayLower.includes('fri')) return 'Friday';
+        return day; // Keep original if no match
+      });
+      
+      // Create course object
+      const course: Course = {
+        id: `${courseId++}`,
+        title: item.title || "Unknown Course",
+        type: item.type || "",
+        time: item.time || "Time not specified",
+        location: item.location || "Location not specified",
+        icon: getCourseIcon(item.title || ""),
+        days: normalizedDays
+      };
+      
+      // Add course to each relevant day
+      normalizedDays.forEach((day: string) => {
+        if (newCoursesByDay[day]) {
+          newCoursesByDay[day].push(course);
+        }
+      });
+    });
+    
+    // Sort courses by time for each day
+    Object.keys(newCoursesByDay).forEach(day => {
+      newCoursesByDay[day].sort((a, b) => {
+        // Extract times for comparison
+        const timeA = a.time.match(/(\d+):(\d+)([AP]M)/);
+        const timeB = b.time.match(/(\d+):(\d+)([AP]M)/);
+        
+        if (!timeA || !timeB) return 0;
+        
+        // Convert to 24-hour format for comparison
+        let hourA = parseInt(timeA[1]);
+        const minuteA = parseInt(timeA[2]);
+        const ampmA = timeA[3];
+        
+        let hourB = parseInt(timeB[1]);
+        const minuteB = parseInt(timeB[2]);
+        const ampmB = timeB[3];
+        
+        // Adjust for PM
+        if (ampmA === 'PM' && hourA !== 12) hourA += 12;
+        if (ampmB === 'PM' && hourB !== 12) hourB += 12;
+        
+        // Adjust for AM 12
+        if (ampmA === 'AM' && hourA === 12) hourA = 0;
+        if (ampmB === 'AM' && hourB === 12) hourB = 0;
+        
+        // Compare hours first
+        if (hourA !== hourB) return hourA - hourB;
+        
+        // If hours are equal, compare minutes
+        return minuteA - minuteB;
+      });
+    });
+    
+    setCoursesByDay(newCoursesByDay);
+    
+    // Set active day to the first day that has courses
+    for (const day of WEEKDAYS) {
+      if (newCoursesByDay[day] && newCoursesByDay[day].length > 0) {
+        setActiveDay(day);
+        break;
+      }
     }
   };
   
@@ -168,9 +290,14 @@ const CoursesScreen = () => {
     if (title.includes("hist")) return "time";
     if (title.includes("art")) return "color-palette";
     if (title.includes("music")) return "musical-notes";
-    if (title.includes("psych")) return "brain";
+    if (title.includes("psych")) return "book";
     
     return "school";
+  };
+
+  // Get the total number of courses across all days
+  const getTotalCourses = () => {
+    return Object.values(coursesByDay).reduce((sum, courses) => sum + courses.length, 0);
   };
 
   return (
@@ -222,35 +349,81 @@ const CoursesScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {courses.length > 0 && (
+          {getTotalCourses() > 0 && (
             <>
-              <Text style={styles.sectionTitle}>Extracted Courses</Text>
-              {courses.map((course) => (
-                <TouchableOpacity key={course.id} style={styles.courseCard}>
-                  <LinearGradient
-                    colors={['#ffffff', '#f5f5f5']}
-                    style={styles.cardGradient}
+              <Text style={styles.sectionTitle}>Your Weekly Schedule</Text>
+              
+              {/* Day selector tabs */}
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.dayTabsContainer}
+              >
+                {WEEKDAYS.map(day => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayTab,
+                      activeDay === day && styles.activeDayTab,
+                      coursesByDay[day].length === 0 && styles.emptyDayTab
+                    ]}
+                    onPress={() => setActiveDay(day)}
+                    disabled={coursesByDay[day].length === 0}
                   >
-                    <View style={styles.iconContainer}>
-                      <Ionicons name={course.icon} size={24} color="#4CAF50" />
-                    </View>
-                    <View style={styles.courseContent}>
-                      <Text style={styles.courseTitle}>{course.title}</Text>
-                      {course.type && (
-                        <Text style={styles.courseType}>{course.type}</Text>
-                      )}
-                      <View style={styles.courseDetails}>
-                        <Ionicons name="time" size={16} color="#757575" />
-                        <Text style={styles.detailText}>{course.time}</Text>
+                    <Text style={[
+                      styles.dayTabText,
+                      activeDay === day && styles.activeDayTabText,
+                      coursesByDay[day].length === 0 && styles.emptyDayTabText
+                    ]}>
+                      {day.slice(0, 3)}
+                    </Text>
+                    {coursesByDay[day].length > 0 && (
+                      <View style={styles.courseBadge}>
+                        <Text style={styles.courseBadgeText}>{coursesByDay[day].length}</Text>
                       </View>
-                      <View style={styles.courseDetails}>
-                        <Ionicons name="location" size={16} color="#757575" />
-                        <Text style={styles.detailText}>{course.location}</Text>
-                      </View>
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              
+              {/* Courses for the selected day */}
+              <View style={styles.dayCoursesContainer}>
+                <Text style={styles.dayTitle}>{activeDay}'s Classes</Text>
+                
+                {coursesByDay[activeDay].length === 0 ? (
+                  <View style={styles.noCoursesContainer}>
+                    <Ionicons name="calendar-outline" size={48} color="#E0E0E0" />
+                    <Text style={styles.noCoursesText}>No classes on {activeDay}</Text>
+                  </View>
+                ) : (
+                  coursesByDay[activeDay].map((course) => (
+                    <TouchableOpacity key={course.id} style={styles.courseCard}>
+                      <LinearGradient
+                        colors={['#ffffff', '#f5f5f5']}
+                        style={styles.cardGradient}
+                      >
+                        <View style={styles.iconContainer}>
+                          <Ionicons name={course.icon} size={24} color="#4CAF50" />
+                        </View>
+                        <View style={styles.courseContent}>
+                          <Text style={styles.courseTitle}>{course.title}</Text>
+                          {course.type && (
+                            <Text style={styles.courseType}>{course.type}</Text>
+                          )}
+                          <View style={styles.courseDetails}>
+                            <Ionicons name="time" size={16} color="#757575" />
+                            <Text style={styles.detailText}>{course.time}</Text>
+                          </View>
+                          <View style={styles.courseDetails}>
+                            <Ionicons name="location" size={16} color="#757575" />
+                            <Text style={styles.detailText}>{course.location}</Text>
+                          </View>
+                        </View>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
             </>
           )}
         </View>
@@ -354,6 +527,73 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#424242',
     marginBottom: 12,
+  },
+  dayTabsContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  dayTab: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  activeDayTab: {
+    backgroundColor: '#E8F5E9',
+  },
+  emptyDayTab: {
+    opacity: 0.5,
+  },
+  dayTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+  },
+  activeDayTabText: {
+    color: '#4CAF50',
+  },
+  emptyDayTabText: {
+    color: '#BDBDBD',
+  },
+  courseBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+  courseBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  dayCoursesContainer: {
+    paddingTop: 8,
+  },
+  dayTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#424242',
+    marginBottom: 16,
+  },
+  noCoursesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  noCoursesText: {
+    fontSize: 16,
+    color: '#9E9E9E',
+    marginTop: 12,
   },
   courseCard: {
     marginBottom: 12,
