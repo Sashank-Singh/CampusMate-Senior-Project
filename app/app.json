@@ -1,5 +1,6 @@
 {
   "expo": {
+<<<<<<< HEAD
     "name": "CampusMate",
     "slug": "campusmate",
     "version": "1.0.0",
@@ -59,5 +60,61 @@
       "typedRoutes": true
     },
     "newArchEnabled": true
+=======
+      "name": "app",
+      "slug": "app",
+      "version": "1.0.0",
+      "description": "CSU",
+      "platforms": [
+          "ios",
+          "android"
+      ],
+      "orientation": "portrait",
+      "icon": "./assets/images/icon.png",
+      "scheme": "campusmate",
+      "entryPoint": "./app/App.tsx",
+      "userInterfaceStyle": "automatic",
+      "splash": {
+          "image": "./assets/images/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+      },
+      "ios": {
+          "supportsTablet": true,
+          "bundleIdentifier": "com.anonymous.campusmate",
+          "infoPlist": {
+              "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
+              "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule."
+          }
+      },
+      "android": {
+          "adaptiveIcon": {
+              "foregroundImage": "./assets/images/adaptive-icon.png",
+              "backgroundColor": "#ffffff"
+          },
+          "permissions": [
+              "CAMERA",
+              "READ_EXTERNAL_STORAGE",
+              "WRITE_EXTERNAL_STORAGE"
+          ]
+      },
+      "web": {
+          "bundler": "metro",
+          "output": "static",
+          "favicon": "./assets/images/favicon.png"
+      },
+      "plugins": [
+          "expo-router",
+          "expo-font"
+      ],
+      "experiments": {
+          "typedRoutes": true
+      },
+      "extra": {
+          "apiUrl": "https://openrouter.ai/api/v1/chat/completions",
+          "OPENROUTER_API_KEY": "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"
+      },
+      "newArchEnabled": true
+>>>>>>> d4bf844 (Added Login screen to the app after the intropage)
   }
 }
