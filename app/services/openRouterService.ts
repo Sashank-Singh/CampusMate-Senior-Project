@@ -1,10 +1,10 @@
 // services/openRouterService.ts
 import axios from 'axios';
-export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-import dotenv from 'dotenv';
-dotenv.config();
+import Constants from 'expo-constants';
 
-export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+const OPENROUTER_API_KEY = Constants.manifest.extra.OPENROUTER_API_KEY;
 
 if (!OPENROUTER_API_KEY) {
   throw new Error('OPENROUTER_API_KEY is not defined in the environment variables.');
@@ -36,7 +36,7 @@ export const processImageWithVisionLLM = async (base64Image: string, prompt: str
         headers: {
           'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
           'Content-Type': 'application/json',
-          'Referer': 'https://campusmateapp.com' // Corrected header key
+          'Referer': 'https://campusmateapp.com'
         }
       }
     );
@@ -50,5 +50,4 @@ export const processImageWithVisionLLM = async (base64Image: string, prompt: str
     console.error('Error calling OpenRouter API:', error);
     throw error;
   }
-  
 };

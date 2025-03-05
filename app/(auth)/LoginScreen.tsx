@@ -69,7 +69,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         {/* Top curved image section */}
         <View style={styles.imageContainer}>
           <Image
-            source={require("app/assets/images/shuffle1.jpg")}
+            source={require("../assets/images/suffle1.jpg")}
             style={styles.backgroundImage}
             resizeMode="cover"
           />

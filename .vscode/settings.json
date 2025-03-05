@@ -60,6 +60,7 @@
       "gopd",
       "hammerjs",
       "hasown",
+      "Intropage",
       "isaacs",
       "isexe",
       "istanbuljs",
@@ -85,6 +86,7 @@
       "nodelib",
       "npmcli",
       "nullthrows",
+      "OPENROUTER",
       "optimise",
       "osascript",
       "osenv",
@@ -151,5 +153,6 @@
       "yocto",
       "zxcvbn",
       "zxing"
-    ]
+    ],
+    "cmake.sourceDirectory": "/Users/sashanksingh/Desktop/CampusMate/node_modules/expo-modules-core/android"
   }
