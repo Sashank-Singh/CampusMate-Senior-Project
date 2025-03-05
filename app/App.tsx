@@ -11,7 +11,11 @@ import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Events";
 import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
+import LoginScreen from './(auth)/LoginScreen'; // Adjust the path as necessary
 
+
+
+// import 'dotenv/config';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -76,6 +80,11 @@ const App = () => {
         <Stack.Screen
           name="Intropage"
           component={IntroScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

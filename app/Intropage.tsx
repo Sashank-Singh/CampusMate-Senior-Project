@@ -9,6 +9,7 @@ import {
   Animated,
 } from "react-native";
 import { NavigationProp } from "@react-navigation/native";
+import LoginScreen from './(auth)/LoginScreen'; // Adjusted the path to the correct location
 
 const { width, height } = Dimensions.get("window");
 
@@ -78,7 +79,7 @@ const Intropage = ({ navigation }: IntroScreenProps) => {
         {/* Navigate to HomeScreen on Press */}
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("HomeTabs")}
+          onPress={() => navigation.navigate("Login")}
         >
           <Text style={styles.buttonText}>Get Started</Text>
         </TouchableOpacity>
