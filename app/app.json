@@ -1,9 +1,9 @@
 {
   "expo": {
-      "name": "app",
-      "slug": "app",
+      "name": "CampusMate", // Changed name to be more descriptive
+      "slug": "campusmate", // Changed slug to match the name
       "version": "1.0.0",
-      "description": "CSU",
+      "description": "CampusMate App for CSU", // Updated description for clarity
       "platforms": [
           "ios",
           "android"
@@ -50,8 +50,7 @@
           "typedRoutes": true
       },
       "extra": {
-          "apiUrl": "https://openrouter.ai/api/v1/chat/completions",
-          "OPENROUTER_API_KEY": "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"
+          "apiUrl": "https://openrouter.ai/api/v1/chat/completions"
       },
       "newArchEnabled": true
   }
