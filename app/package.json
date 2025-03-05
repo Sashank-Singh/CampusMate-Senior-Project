@@ -34,6 +34,7 @@
     "expo-notifications": "~0.27.8",
     "expo-router": "~3.4.10",
     "expo-status-bar": "~1.11.1",
+    "lucide-react": "^0.475.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-native": "0.73.6",
@@ -51,7 +52,8 @@
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-private-methods": "^7.18.6",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@types/react": "~18.2.45"
+    "@types/react": "~18.2.45",
+    "@types/react-native-vector-icons": "^6.4.18"
   },
   "jest": {
     "preset": "react-native"

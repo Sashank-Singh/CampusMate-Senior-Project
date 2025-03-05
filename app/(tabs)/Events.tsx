@@ -8,6 +8,7 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 // Import local images
 const eventImages = {
@@ -17,7 +18,7 @@ const eventImages = {
   environment_summit: require("../assets/images/logo.png"),
 };
 
-type Tab = "ongoing" | "upcoming";
+type Tab = "ongoing" | "upcoming" | "past";
 
 const MobilePreview = () => {
   const [activeTab, setActiveTab] = useState<Tab>("ongoing");
@@ -34,21 +35,9 @@ const MobilePreview = () => {
     tags: string[];
     image: any;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const events: {
-    [key in Tab]: {
-      id: number;
-      title: string;
-      date: string;
-      time: string;
-      location: string;
-      description: string;
-      category: string;
-      attendees: number;
-      tags: string[];
-      image: any;
-    }[];
-  } = {
+  const events = {
     ongoing: [
       {
         id: 1,
@@ -105,12 +94,31 @@ const MobilePreview = () => {
         image: eventImages.environment_summit,
       },
     ],
+    past: [
+      {
+        id: 5,
+        title: "Digital Marketing Conference",
+        date: "Jan 15, 2025",
+        time: "9:00 AM - 4:00 PM",
+        location: "Digital Hub Center",
+        description:
+          "A successful conference covering the latest digital marketing trends.",
+        category: "Marketing",
+        attendees: 275,
+        tags: ["Digital Marketing", "SEO", "Social Media"],
+        image: eventImages.tech_summit,
+      },
+    ],
   };
 
   const openModal = (event: any) => {
     setSelectedEvent(event);
     setModalVisible(true);
   };
+
+  const filteredEvents = events[activeTab].filter((event) =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
@@ -122,18 +130,31 @@ const MobilePreview = () => {
       {/* Search Bar */}
       <View
         style={{
+          flexDirection: "row",
+          alignItems: "center",
           backgroundColor: "#e0e0e0",
           borderRadius: 20,
           padding: 10,
           marginBottom: 16,
         }}
       >
-        <TextInput placeholder="Search events..." style={{ fontSize: 16 }} />
+        <Icon name="search" size={16} color="gray" style={{ marginRight: 8 }} />
+        <TextInput
+          placeholder="Search events..."
+          style={{ fontSize: 16, flex: 1 }}
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Icon name="times-circle" size={16} color="gray" />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Tabs */}
       <View style={{ flexDirection: "row", marginBottom: 16 }}>
-        {["ongoing", "upcoming"].map((tab) => (
+        {["ongoing", "upcoming", "past"].map((tab) => (
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveTab(tab as Tab)}
@@ -155,7 +176,7 @@ const MobilePreview = () => {
 
       {/* Event List */}
       <ScrollView>
-        {events[activeTab].map((event) => (
+        {filteredEvents.map((event) => (
           <TouchableOpacity
             key={event.id}
             onPress={() => openModal(event)}
@@ -178,8 +199,8 @@ const MobilePreview = () => {
             <Text>
               {event.date} - {event.time}
             </Text>
-            <Text>📍 {event.location}</Text>
-            <Text>👥 {event.attendees} attending</Text>
+            <Text>{event.location}</Text>
+            <Text>{event.attendees} attending</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -217,11 +238,9 @@ const MobilePreview = () => {
                   {selectedEvent.title}
                 </Text>
                 <Text style={{ fontSize: 16, marginVertical: 5 }}>
-                  📅 {selectedEvent.date} | ⏰ {selectedEvent.time}
+                  {selectedEvent.date} | {selectedEvent.time}
                 </Text>
-                <Text style={{ fontSize: 16 }}>
-                  📍 {selectedEvent.location}
-                </Text>
+                <Text style={{ fontSize: 16 }}>{selectedEvent.location}</Text>
                 <Text style={{ marginVertical: 10 }}>
                   {selectedEvent.description}
                 </Text>
@@ -232,7 +251,7 @@ const MobilePreview = () => {
                 <Text style={{ fontWeight: "bold", marginTop: 10 }}>
                   Attendees:
                 </Text>
-                <Text>👥 {selectedEvent.attendees}</Text>
+                <Text>{selectedEvent.attendees}</Text>
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
                   style={{
