@@ -1,57 +1,51 @@
 {
   "expo": {
-      "name": "CampusMate", // Changed name to be more descriptive
-      "slug": "campusmate", // Changed slug to match the name
-      "version": "1.0.0",
-      "description": "CampusMate App for CSU", // Updated description for clarity
-      "platforms": [
-          "ios",
-          "android"
-      ],
-      "orientation": "portrait",
-      "icon": "./assets/images/icon.png",
-      "scheme": "campusmate",
-      "entryPoint": "./app/App.tsx",
-      "userInterfaceStyle": "automatic",
-      "splash": {
-          "image": "./assets/images/splash.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+    "name": "CampusMate",
+    "slug": "campusmate",
+    "version": "1.0.0",
+    "description": "CampusMate App for CSU",
+    "platforms": ["ios", "android"],
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "campusmate",
+    "entryPoint": "./app/App.tsx",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.campusmate",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
+        "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
       },
-      "ios": {
-          "supportsTablet": true,
-          "bundleIdentifier": "com.anonymous.campusmate",
-          "infoPlist": {
-              "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
-              "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule."
-          }
-      },
-      "android": {
-          "adaptiveIcon": {
-              "foregroundImage": "./assets/images/adaptive-icon.png",
-              "backgroundColor": "#ffffff"
-          },
-          "permissions": [
-              "CAMERA",
-              "READ_EXTERNAL_STORAGE",
-              "WRITE_EXTERNAL_STORAGE"
-          ]
-      },
-      "web": {
-          "bundler": "metro",
-          "output": "static",
-          "favicon": "./assets/images/favicon.png"
-      },
-      "plugins": [
-          "expo-router",
-          "expo-font"
-      ],
-      "experiments": {
-          "typedRoutes": true
-      },
-      "extra": {
-          "apiUrl": "https://openrouter.ai/api/v1/chat/completions"
-      },
-      "newArchEnabled": true
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://openrouter.ai/api/v1/chat/completions"
+    },
+    "newArchEnabled": true
   }
 }

@@ -8,7 +8,7 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons"; // ✅ Fixed Import
 
 // Import local images
 const eventImages = {
@@ -138,7 +138,12 @@ const MobilePreview = () => {
           marginBottom: 16,
         }}
       >
-        <Icon name="search" size={16} color="gray" style={{ marginRight: 8 }} />
+        <FontAwesome
+          name="search"
+          size={16}
+          color="gray"
+          style={{ marginRight: 8 }}
+        />
         <TextInput
           placeholder="Search events..."
           style={{ fontSize: 16, flex: 1 }}
@@ -147,7 +152,7 @@ const MobilePreview = () => {
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <Icon name="times-circle" size={16} color="gray" />
+            <FontAwesome name="times-circle" size={16} color="gray" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -196,16 +201,14 @@ const MobilePreview = () => {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
               {event.title}
             </Text>
-            <Text>
-              {event.date} - {event.time}
-            </Text>
+            <Text>{`${event.date} - ${event.time}`}</Text>
             <Text>{event.location}</Text>
             <Text>{event.attendees} attending</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Event Details Modal */}
+      {/* Event Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View
           style={{
@@ -237,21 +240,13 @@ const MobilePreview = () => {
                 >
                   {selectedEvent.title}
                 </Text>
-                <Text style={{ fontSize: 16, marginVertical: 5 }}>
-                  {selectedEvent.date} | {selectedEvent.time}
-                </Text>
+                <Text
+                  style={{ fontSize: 16, marginVertical: 5 }}
+                >{`${selectedEvent.date} | ${selectedEvent.time}`}</Text>
                 <Text style={{ fontSize: 16 }}>{selectedEvent.location}</Text>
                 <Text style={{ marginVertical: 10 }}>
                   {selectedEvent.description}
                 </Text>
-                <Text style={{ fontWeight: "bold" }}>Category:</Text>
-                <Text>{selectedEvent.category}</Text>
-                <Text style={{ fontWeight: "bold", marginTop: 10 }}>Tags:</Text>
-                <Text>{selectedEvent.tags.join(", ")}</Text>
-                <Text style={{ fontWeight: "bold", marginTop: 10 }}>
-                  Attendees:
-                </Text>
-                <Text>{selectedEvent.attendees}</Text>
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
                   style={{

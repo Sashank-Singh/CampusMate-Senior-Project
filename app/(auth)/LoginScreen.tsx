@@ -24,7 +24,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
@@ -80,13 +80,13 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
         </View>
 
         {/* Login form */}
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.formContainer, 
-            { 
+            styles.formContainer,
+            {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }] 
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Text style={styles.welcomeText}>Welcome Back</Text>

@@ -3,7 +3,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons"; // Import icons
-import { AppRegistry } from 'react-native';
+import { AppRegistry } from "react-native";
+import appConfig from "./app.json"; // ✅ Correct JSON import
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./Intropage";
 import ExploreScreen from "./(tabs)/explore";
@@ -11,20 +12,21 @@ import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Events";
 import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
-import LoginScreen from './(auth)/LoginScreen'; // Adjust the path as necessary
+import LoginScreen from "./(auth)/LoginScreen"; // ✅ Ensure correct path
+import SignUpScreen from "./(auth)/SignUpScreen"; // ✅ Added SignUpScreen
 
-
-
-// import 'dotenv/config';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// ✅ Fix: Access name from app.json correctly
+const appName = appConfig.expo.name;
 
 const HomeTabs = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: 
+          let iconName:
             | "home-outline"
             | "home"
             | "search"
@@ -56,6 +58,9 @@ const HomeTabs = () => {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        tabBarActiveTintColor: "#2F614A",
+        tabBarInactiveTintColor: "gray",
+        tabBarStyle: { backgroundColor: "white", height: 60 },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
@@ -88,6 +93,11 @@ const App = () => {
           options={{ headerShown: false }}
         />
         <Stack.Screen
+          name="SignUp" // ✅ Added SignUp route
+          component={SignUpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="HomeTabs"
           component={HomeTabs}
           options={{ headerShown: false }}
@@ -99,6 +109,4 @@ const App = () => {
 
 export default App;
 
-import { name as appName } from './app.json';
-
-AppRegistry.registerComponent(appName, () => App);
+AppRegistry.registerComponent(appName, () => App); // ✅ Fixed JSON import issue
