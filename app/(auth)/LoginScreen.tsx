@@ -12,19 +12,17 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import { NavigationProp } from "@react-navigation/native";
+import { useRouter } from 'expo-router';
+import { supabase } from '../utils/supabase';
 
 const { width, height } = Dimensions.get("window");
 
-interface LoginScreenProps {
-  navigation: NavigationProp<any>;
-}
-
-const LoginScreen = ({ navigation }: LoginScreenProps) => {
+const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  
+  const router = useRouter();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
@@ -43,21 +41,31 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     ]).start();
   }, []);
 
-  const handleLogin = () => {
-    // Implement your login logic here
-    console.log("Login with:", email, password);
-    // Navigate to home on successful login
-    navigation.navigate("HomeTabs");
+  const handleLogin = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        console.error('Error signing in:', error.message);
+        return;
+      }
+      
+      console.log('Successfully logged in!');
+      router.replace('/(tabs)');  // Navigate to tabs after successful login
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+    }
   };
 
   const handleForgotPassword = () => {
-    // Navigate to forgot password screen
-    console.log("Forgot password");
+    router.push('/forgot-password');  // Adjust this route as needed
   };
 
   const handleSignUp = () => {
-    // Navigate to sign up screen
-    navigation.navigate("SignUp");
+    router.push('/signup');  // Adjust this route as needed
   };
 
   return (
@@ -66,7 +74,6 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Top curved image section */}
         <View style={styles.imageContainer}>
           <Image
             source={require("../assets/images/suffle1.jpg")}
@@ -79,7 +86,6 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </View>
         </View>
 
-        {/* Login form */}
         <Animated.View 
           style={[
             styles.formContainer, 
@@ -126,8 +132,8 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </View>
 
           <TouchableOpacity
-            onPress={handleForgotPassword}
             style={styles.forgotPasswordContainer}
+            onPress={handleForgotPassword}
           >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
@@ -135,24 +141,6 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <View style={styles.socialButtonsContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>G</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>f</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>in</Text>
-            </TouchableOpacity>
-          </View>
 
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don't have an account? </Text>

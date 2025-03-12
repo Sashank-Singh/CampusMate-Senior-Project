@@ -9,6 +9,7 @@ import {
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { LinearGradient } from "expo-linear-gradient";
 
 // Import local images
 const eventImages = {
@@ -121,9 +122,19 @@ const MobilePreview = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
+    <LinearGradient
+      colors={["#f0fff0", "#ffffff"]}
+      style={{ flex: 1, padding: 24 }}
+    >
       {/* Header */}
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
+      <Text
+        style={{
+          fontSize: 28,
+          fontWeight: "bold",
+          marginBottom: 20,
+          fontFamily: "Poppins",
+        }}
+      >
         Events
       </Text>
 
@@ -132,44 +143,61 @@ const MobilePreview = () => {
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "#e0e0e0",
+          borderWidth: 1,
+          borderColor: "#ccc",
           borderRadius: 20,
-          padding: 10,
-          marginBottom: 16,
+          padding: 12,
+          marginBottom: 20,
+          backgroundColor: "rgba(255,255,255,0.9)",
         }}
       >
-        <Icon name="search" size={16} color="gray" style={{ marginRight: 8 }} />
+        <Icon name="search" size={18} color="#666" style={{ marginRight: 10 }} />
         <TextInput
           placeholder="Search events..."
-          style={{ fontSize: 16, flex: 1 }}
+          style={{ fontSize: 16, flex: 1, fontFamily: "Poppins" }}
           value={searchQuery}
           onChangeText={(text) => setSearchQuery(text)}
         />
         {searchQuery ? (
           <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <Icon name="times-circle" size={16} color="gray" />
+            <Icon name="times-circle" size={18} color="#666" />
           </TouchableOpacity>
         ) : null}
       </View>
 
       {/* Tabs */}
-      <View style={{ flexDirection: "row", marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", marginBottom: 20 }}>
         {["ongoing", "upcoming", "past"].map((tab) => (
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveTab(tab as Tab)}
             style={{
               flex: 1,
-              paddingVertical: 10,
-              borderRadius: 20,
-              backgroundColor: activeTab === tab ? "darkgreen" : "#e0e0e0",
+              paddingVertical: 12,
               alignItems: "center",
               marginHorizontal: 5,
             }}
           >
-            <Text style={{ color: activeTab === tab ? "#fff" : "#000" }}>
+            <Text
+              style={{
+                color: activeTab === tab ? "#006400" : "#333",
+                fontFamily: "Poppins",
+                fontSize: 16,
+                fontWeight: activeTab === tab ? "bold" : "normal",
+              }}
+            >
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Text>
+            {activeTab === tab && (
+              <View
+                style={{
+                  height: 2,
+                  backgroundColor: "#006400",
+                  width: "80%",
+                  marginTop: 5,
+                }}
+              />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -182,25 +210,40 @@ const MobilePreview = () => {
             onPress={() => openModal(event)}
             style={{
               backgroundColor: "white",
-              borderRadius: 10,
+              borderRadius: 15,
               padding: 16,
               marginBottom: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
             }}
           >
-            {/* Event Image */}
             <Image
               source={event.image}
-              style={{ width: "100%", height: 150, borderRadius: 10 }}
+              style={{ width: "100%", height: 160, borderRadius: 10 }}
               resizeMode="cover"
             />
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: "bold",
+                marginTop: 12,
+                fontFamily: "Poppins",
+              }}
+            >
               {event.title}
             </Text>
-            <Text>
+            <Text style={{ fontFamily: "Poppins", color: "#666" }}>
               {event.date} - {event.time}
             </Text>
-            <Text>{event.location}</Text>
-            <Text>{event.attendees} attending</Text>
+            <Text style={{ fontFamily: "Poppins", color: "#666" }}>
+              {event.location}
+            </Text>
+            <Text style={{ fontFamily: "Poppins", color: "#006400" }}>
+              {event.attendees} attending
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -219,10 +262,15 @@ const MobilePreview = () => {
           <View
             style={{
               backgroundColor: "white",
-              padding: 20,
-              borderRadius: 10,
+              padding: 24,
+              borderRadius: 15,
               width: "100%",
               maxWidth: 400,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5,
             }}
           >
             {selectedEvent && (
@@ -232,37 +280,77 @@ const MobilePreview = () => {
                   style={{ width: "100%", height: 200, borderRadius: 10 }}
                   resizeMode="cover"
                 />
-                <Text
-                  style={{ fontSize: 22, fontWeight: "bold", marginTop: 10 }}
-                >
-                  {selectedEvent.title}
-                </Text>
-                <Text style={{ fontSize: 16, marginVertical: 5 }}>
-                  {selectedEvent.date} | {selectedEvent.time}
-                </Text>
-                <Text style={{ fontSize: 16 }}>{selectedEvent.location}</Text>
-                <Text style={{ marginVertical: 10 }}>
-                  {selectedEvent.description}
-                </Text>
-                <Text style={{ fontWeight: "bold" }}>Category:</Text>
-                <Text>{selectedEvent.category}</Text>
-                <Text style={{ fontWeight: "bold", marginTop: 10 }}>Tags:</Text>
-                <Text>{selectedEvent.tags.join(", ")}</Text>
-                <Text style={{ fontWeight: "bold", marginTop: 10 }}>
-                  Attendees:
-                </Text>
-                <Text>{selectedEvent.attendees}</Text>
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      fontFamily: "Poppins",
+                    }}
+                  >
+                    {selectedEvent.title}
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16, fontFamily: "Poppins" }}>
+                    {selectedEvent.date} | {selectedEvent.time}
+                  </Text>
+                  <Text style={{ fontSize: 16, fontFamily: "Poppins" }}>
+                    {selectedEvent.location}
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16, fontFamily: "Poppins" }}>
+                    {selectedEvent.description}
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{ fontWeight: "bold", fontFamily: "Poppins" }}
+                  >
+                    Category:
+                  </Text>
+                  <Text style={{ fontFamily: "Poppins" }}>
+                    {selectedEvent.category}
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{ fontWeight: "bold", fontFamily: "Poppins" }}
+                  >
+                    Tags:
+                  </Text>
+                  <Text style={{ fontFamily: "Poppins" }}>
+                    {selectedEvent.tags.join(", ")}
+                  </Text>
+                </View>
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{ fontWeight: "bold", fontFamily: "Poppins" }}
+                  >
+                    Attendees:
+                  </Text>
+                  <Text style={{ fontFamily: "Poppins" }}>
+                    {selectedEvent.attendees}
+                  </Text>
+                </View>
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
                   style={{
                     marginTop: 20,
-                    backgroundColor: "darkgreen",
-                    padding: 10,
+                    backgroundColor: "#006400",
+                    padding: 15,
                     borderRadius: 10,
                     alignItems: "center",
                   }}
                 >
-                  <Text style={{ color: "white", fontWeight: "bold" }}>
+                  <Text
+                    style={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontFamily: "Poppins",
+                    }}
+                  >
                     Close
                   </Text>
                 </TouchableOpacity>
@@ -271,7 +359,7 @@ const MobilePreview = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 };
 

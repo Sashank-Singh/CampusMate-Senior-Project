@@ -1,9 +1,9 @@
 {
   "expo": {
-      "name": "CampusMate", // Changed name to be more descriptive
-      "slug": "campusmate", // Changed slug to match the name
+      "name": "CampusMate",
+      "slug": "campusmate", 
       "version": "1.0.0",
-      "description": "CampusMate App for CSU", // Updated description for clarity
+      "description": "CampusMate App for CSU",
       "platforms": [
           "ios",
           "android"
@@ -11,7 +11,6 @@
       "orientation": "portrait",
       "icon": "./assets/images/icon.png",
       "scheme": "campusmate",
-      "entryPoint": "./app/App.tsx",
       "userInterfaceStyle": "automatic",
       "splash": {
           "image": "./assets/images/splash.png",

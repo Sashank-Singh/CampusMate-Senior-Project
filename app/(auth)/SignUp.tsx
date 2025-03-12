@@ -86,7 +86,7 @@ export default function SignUpScreen() {
 
       if (data?.user) {
         console.log('Sign up successful');
-        router.replace('../(auth)/LoginScreen');
+        router.replace('LoginScreen');
       }
     } catch (err) {
       console.error('Sign up error:', err);
@@ -95,7 +95,7 @@ export default function SignUpScreen() {
   };
 
   const handleReturnToLogin = () => {
-    router.replace('../(auth)/LoginScreen');
+    router.replace('LoginScreen');
   };
 
   return (
@@ -232,7 +232,7 @@ export default function SignUpScreen() {
 
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Already have an account? </Text>
-              <Link href="../(auth)/LoginScreen" asChild>
+              <Link href="LoginScreen" asChild>
                 <TouchableOpacity>
                   <Text style={styles.loginLink}>Login</Text>
                 </TouchableOpacity>
