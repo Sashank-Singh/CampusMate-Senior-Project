@@ -11,8 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { NavigationProp } from "@react-navigation/native";
+import { useAuth } from "../contexts/AuthContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +27,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -43,11 +49,50 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     ]).start();
   }, []);
 
-  const handleLogin = () => {
-    // Implement your login logic here
-    console.log("Login with:", email, password);
-    // Navigate to home on successful login
-    navigation.navigate("HomeTabs");
+  const validateInputs = () => {
+    let isValid = true;
+
+    // Reset errors
+    setEmailError("");
+    setPasswordError("");
+
+    if (!email) {
+      setEmailError("Email is required");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required");
+      isValid = false;
+    }
+
+    return isValid;
+  };
+
+  const { login } = useAuth();
+
+  const handleLogin = async () => {
+    if (!validateInputs()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await login(email, password);
+
+      if (response.success) {
+        // Navigate to home on successful login
+        navigation.navigate("HomeTabs");
+      } else {
+        Alert.alert("Login Failed", response.message);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -85,8 +130,8 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             styles.formContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
+              transform: [{ translateY: slideAnim }]
+            }
           ]}
         >
           <Text style={styles.welcomeText}>Welcome Back</Text>
@@ -95,25 +140,32 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, emailError ? styles.inputError : null]}
               placeholder="Enter your email"
               placeholderTextColor="#999"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => {
+                setEmail(text);
+                setEmailError("");
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
             />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Password</Text>
-            <View style={styles.passwordContainer}>
+            <View style={[styles.passwordContainer, passwordError ? styles.inputError : null]}>
               <TextInput
                 style={styles.passwordInput}
                 placeholder="Enter your password"
                 placeholderTextColor="#999"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setPasswordError("");
+                }}
                 secureTextEntry={!isPasswordVisible}
               />
               <TouchableOpacity
@@ -123,6 +175,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
                 <Text>{isPasswordVisible ? "🙈" : "👁️"}</Text>
               </TouchableOpacity>
             </View>
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
           </View>
 
           <TouchableOpacity
@@ -132,8 +185,16 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
@@ -326,6 +387,15 @@ const styles = StyleSheet.create({
     color: "#2F614A",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 12,
+    marginTop: 5,
   },
 });
 
