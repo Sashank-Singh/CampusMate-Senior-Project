@@ -1,6 +1,6 @@
-import * as SecureStore from 'expo-secure-store';
-import * as Crypto from 'expo-crypto';
-import { executeSql } from './apiClient';
+import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
+import { executeSql } from "./apiClient";
 
 // Interface for user data
 export interface User {
@@ -35,22 +35,22 @@ export const registerUser = async (
 ): Promise<AuthResponse> => {
   try {
     // Check if user already exists
-    const checkUserResult = await executeSql<{rows: any[]}>(
-      'SELECT * FROM users WHERE email = $1',
+    const checkUserResult = await executeSql<{ rows: any[] }>(
+      "SELECT * FROM users WHERE email = $1",
       [email.toLowerCase()]
     );
 
     if (!checkUserResult.success) {
       return {
         success: false,
-        message: checkUserResult.message || 'Failed to check existing user'
+        message: checkUserResult.message || "Failed to check existing user",
       };
     }
 
-    if (checkUserResult.data?.rows?.length > 0) {
+    if ((checkUserResult.data?.rows?.length ?? 0) > 0) {
       return {
         success: false,
-        message: 'User with this email already exists'
+        message: "User with this email already exists",
       };
     }
 
@@ -61,15 +61,15 @@ export const registerUser = async (
     const now = new Date().toISOString();
 
     // Insert the new user
-    const insertResult = await executeSql<{rows: User[]}>(
-      'INSERT INTO users (email, password, name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, created_at',
+    const insertResult = await executeSql<{ rows: User[] }>(
+      "INSERT INTO users (email, password, name, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, name, created_at",
       [email.toLowerCase(), hashedPassword, name || null, now, now]
     );
 
     if (!insertResult.success || !insertResult.data?.rows?.[0]) {
       return {
         success: false,
-        message: insertResult.message || 'Failed to create user'
+        message: insertResult.message || "Failed to create user",
       };
     }
 
@@ -82,20 +82,20 @@ export const registerUser = async (
     );
 
     // Store the token in secure storage
-    await SecureStore.setItemAsync('auth_token', token);
-    await SecureStore.setItemAsync('user_id', user.id.toString());
+    await SecureStore.setItemAsync("auth_token", token);
+    await SecureStore.setItemAsync("user_id", user.id.toString());
 
     return {
       success: true,
-      message: 'User registered successfully',
+      message: "User registered successfully",
       user,
-      token
+      token,
     };
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     return {
       success: false,
-      message: 'An error occurred during registration'
+      message: "An error occurred during registration",
     };
   }
 };
@@ -107,15 +107,15 @@ export const loginUser = async (
 ): Promise<AuthResponse> => {
   try {
     // Find the user
-    const result = await executeSql<{rows: any[]}>(
-      'SELECT * FROM users WHERE email = $1',
+    const result = await executeSql<{ rows: any[] }>(
+      "SELECT * FROM users WHERE email = $1",
       [email.toLowerCase()]
     );
 
     if (!result.success || !result.data?.rows?.length) {
       return {
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       };
     }
 
@@ -127,7 +127,7 @@ export const loginUser = async (
     if (hashedPassword !== user.password) {
       return {
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       };
     }
 
@@ -138,23 +138,23 @@ export const loginUser = async (
     );
 
     // Store the token in secure storage
-    await SecureStore.setItemAsync('auth_token', token);
-    await SecureStore.setItemAsync('user_id', user.id.toString());
+    await SecureStore.setItemAsync("auth_token", token);
+    await SecureStore.setItemAsync("user_id", user.id.toString());
 
     // Remove password from user object before returning
     const { password: _, ...userWithoutPassword } = user;
 
     return {
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       user: userWithoutPassword as User,
-      token
+      token,
     };
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return {
       success: false,
-      message: 'An error occurred during login'
+      message: "An error occurred during login",
     };
   }
 };
@@ -162,20 +162,20 @@ export const loginUser = async (
 // Logout a user
 export const logoutUser = async (): Promise<void> => {
   try {
-    await SecureStore.deleteItemAsync('auth_token');
-    await SecureStore.deleteItemAsync('user_id');
+    await SecureStore.deleteItemAsync("auth_token");
+    await SecureStore.deleteItemAsync("user_id");
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
   }
 };
 
 // Check if a user is logged in
 export const isLoggedIn = async (): Promise<boolean> => {
   try {
-    const token = await SecureStore.getItemAsync('auth_token');
+    const token = await SecureStore.getItemAsync("auth_token");
     return !!token;
   } catch (error) {
-    console.error('Auth check error:', error);
+    console.error("Auth check error:", error);
     return false;
   }
 };
@@ -183,14 +183,14 @@ export const isLoggedIn = async (): Promise<boolean> => {
 // Get the current user
 export const getCurrentUser = async (): Promise<User | null> => {
   try {
-    const userId = await SecureStore.getItemAsync('user_id');
+    const userId = await SecureStore.getItemAsync("user_id");
 
     if (!userId) {
       return null;
     }
 
-    const result = await executeSql<{rows: User[]}>(
-      'SELECT id, email, name, created_at FROM users WHERE id = $1',
+    const result = await executeSql<{ rows: User[] }>(
+      "SELECT id, email, name, created_at FROM users WHERE id = $1",
       [userId]
     );
 
@@ -200,7 +200,7 @@ export const getCurrentUser = async (): Promise<User | null> => {
 
     return result.data.rows[0];
   } catch (error) {
-    console.error('Get current user error:', error);
+    console.error("Get current user error:", error);
     return null;
   }
 };
