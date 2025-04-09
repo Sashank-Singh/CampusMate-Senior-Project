@@ -1,4 +1,6 @@
+// ✅ Polyfill must come before anything else
 import "./shim.js";
+
 import React, { useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -114,5 +116,3 @@ const App = () => (
 );
 
 export default App;
-
-AppRegistry.registerComponent(appName, () => App); // ✅ Fixed JSON import issue
