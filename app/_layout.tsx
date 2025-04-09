@@ -14,6 +14,13 @@ export default function RootLayout() {
           options={{ headerShown: false }} 
         />
         <Stack.Screen 
+          name="(modals)" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
           name="screens/LibraryDetails" 
           options={{ 
             title: 'Library',

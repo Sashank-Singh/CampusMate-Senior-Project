@@ -1,0 +1,31 @@
+# Cursor Rules
+
+## Cursor Behavior
+- Cursor should be visible at all times during text editing
+- Cursor should blink at a rate of 500ms on, 500ms off
+- Cursor color should contrast with background for visibility
+- Cursor width should be 2px for normal mode, 1px for insert mode
+
+## Navigation Rules
+- Arrow keys move cursor in corresponding directions
+- Home/End keys move to beginning/end of line
+- Page Up/Down keys move viewport by one page
+- Ctrl+Left/Right moves cursor by word
+- Ctrl+Home/End moves to beginning/end of document
+
+## Selection Rules
+- Shift+Arrow keys extend selection in direction of arrow
+- Shift+Home/End extends selection to beginning/end of line
+- Ctrl+A selects entire document
+- Double-click selects word
+- Triple-click selects paragraph
+
+## Multi-cursor Support
+- Alt+Click creates additional cursor
+- Ctrl+Alt+Up/Down creates cursors on adjacent lines
+- Escape key returns to single cursor mode
+
+## Accessibility
+- Cursor should be configurable for high-contrast mode
+- Cursor size should be adjustable for visibility needs
+- Cursor blink rate should be configurable, including option to disable blinking
