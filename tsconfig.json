@@ -6,6 +6,6 @@
       "@/*": ["./app/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "app/shim.js"],
   "exclude": ["node_modules"]
 }
