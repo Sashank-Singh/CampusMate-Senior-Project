@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -16,6 +18,10 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = (props: ProfileScreenProps) => {
+  // Get auth context and navigation
+  const { user, logout } = useAuth();
+  const navigation = useNavigation();
+
   // State for modals
   const [showSettings, setShowSettings] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
@@ -23,12 +29,55 @@ const ProfileScreen = (props: ProfileScreenProps) => {
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Function to extract CSU ID from email
+
+  const extractCsuIdFromEmail = (email: string): string => {
+    // Common CSU email formats:
+    // - 7-digit ID directly in email: 1234567@vikes.csuohio.edu
+    // - ID with letter prefix: s1234567@vikes.csuohio.edu
+
+    // First try to find a pattern of exactly 7 digits
+    const sevenDigitMatch = email.match(/\b\d{7}\b/);
+    if (sevenDigitMatch) {
+      return sevenDigitMatch[0];
+    }
+
+    // If that fails, look for any 7 consecutive digits
+    const anySevenDigits = email.match(/\d{7}/);
+    if (anySevenDigits) {
+      return anySevenDigits[0];
+    }
+
+    // If that fails, try to extract digits after common prefixes
+    const prefixMatch = email.match(/[a-z](\d+)@/i);
+    if (prefixMatch && prefixMatch[1] && prefixMatch[1].length >= 7) {
+      return prefixMatch[1].substring(0, 7);
+    }
+
+    return '0000000'; // Default ID if no match found
+  };
+
+  // Initialize user data with extracted CSU ID if available
   const [userData, setUserData] = useState({
-    name: props.name || 'John Doe',
-    csuId: props.csuId || '1234567',
+    name: user?.name || props.name || 'John Doe',
+    csuId: user?.email ? extractCsuIdFromEmail(user.email) : (props.csuId || '0000000'),
     status: props.status || 'Active',
     profileImage: props.profileImage || 'https://via.placeholder.com/150'
   });
+
+  // Update user data when user changes
+  useEffect(() => {
+    if (user) {
+      const csuId = user.email ? extractCsuIdFromEmail(user.email) : props.csuId || '0000000';
+
+      setUserData(prev => ({
+        ...prev,
+        name: user.name || prev.name,
+        csuId: csuId
+      }));
+    }
+  }, [user]);
 
   console.log('Props:', props);
   console.log('UserData:', userData);
@@ -135,10 +184,10 @@ const ProfileScreen = (props: ProfileScreenProps) => {
                 </Text>
                 <Text style={[styles.helpText, {marginTop: 15, fontWeight: 'bold', textAlign: 'center', color: '#006633', fontSize: 16}]}>
                   See Something Suspicious, Say Something!
-                  
 
 
-                  
+
+
                 </Text>
               </View>
             </ScrollView>
@@ -233,7 +282,14 @@ const ProfileScreen = (props: ProfileScreenProps) => {
             <Text style={styles.universityText}>CLEVELAND STATE UNIVERSITY</Text>
             <View style={styles.detailsContainer}>
               <Text style={styles.detailText}>{userData.name}</Text>
-              <Text style={styles.detailText}>CSU ID: {userData.csuId}</Text>
+              <View style={styles.idContainer}>
+                <Text style={styles.detailText}>CSU ID: {userData.csuId}</Text>
+                {user?.email && (
+                  <Text style={styles.emailNote}>
+                    {user.email.length > 25 ? user.email.substring(0, 22) + '...' : user.email}
+                  </Text>
+                )}
+              </View>
               <Text style={styles.detailText}>{userData.status}</Text>
             </View>
           </View>
@@ -293,6 +349,31 @@ const ProfileScreen = (props: ProfileScreenProps) => {
         <TouchableOpacity style={styles.menuItem}>
           <Ionicons name="information-circle-outline" size={24} color="#006633" />
           <Text style={styles.menuText}>About</Text>
+          <Ionicons name="chevron-forward" size={24} color="#666" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuItem, styles.logoutItem]}
+          onPress={() => {
+            Alert.alert(
+              "Logout",
+              "Are you sure you want to logout?",
+              [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Logout",
+                  style: "destructive",
+                  onPress: async () => {
+                    await logout();
+                    // Navigation will be handled by the AuthProvider
+                  }
+                }
+              ]
+            );
+          }}
+        >
+          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+          <Text style={[styles.menuText, styles.logoutText]}>Logout</Text>
           <Ionicons name="chevron-forward" size={24} color="#666" />
         </TouchableOpacity>
       </View>
@@ -492,6 +573,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
+  },
+  logoutItem: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  logoutText: {
+    color: '#FF3B30',
+  },
+  idContainer: {
+    marginBottom: 8,
+  },
+  emailNote: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    marginTop: 2,
   },
 });
 

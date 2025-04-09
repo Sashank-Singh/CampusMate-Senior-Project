@@ -19,17 +19,22 @@ import { useAuth } from "../contexts/AuthContext";
 
 const { width, height } = Dimensions.get("window");
 
-interface LoginScreenProps {
+interface SignUpScreenProps {
   navigation: NavigationProp<any>;
 }
 
-const LoginScreen = ({ navigation }: LoginScreenProps) => {
+const SignUpScreen = ({ navigation }: SignUpScreenProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [nameError, setNameError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -49,60 +54,80 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
     ]).start();
   }, []);
 
-  const validateInputs = () => {
-    let isValid = true;
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-    // Reset errors
+  const { register } = useAuth();
+
+  const handleSignUp = async () => {
+    // Reset previous errors
     setEmailError("");
+    setNameError("");
     setPasswordError("");
+    setConfirmPasswordError("");
+
+    // Validate inputs
+    let isValid = true;
 
     if (!email) {
       setEmailError("Email is required");
+      isValid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email");
+      isValid = false;
+    }
+
+    if (!name) {
+      setNameError("Name is required");
       isValid = false;
     }
 
     if (!password) {
       setPasswordError("Password is required");
       isValid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters");
+      isValid = false;
     }
 
-    return isValid;
-  };
-
-  const { login } = useAuth();
-
-  const handleLogin = async () => {
-    if (!validateInputs()) {
-      return;
+    if (!confirmPassword) {
+      setConfirmPasswordError("Please confirm your password");
+      isValid = false;
+    } else if (password !== confirmPassword) {
+      setConfirmPasswordError("Passwords don't match");
+      isValid = false;
     }
+
+    if (!isValid) return;
 
     setIsLoading(true);
 
     try {
-      const response = await login(email, password);
+      // Call the registration service
+      const response = await register(email, password, name);
 
       if (response.success) {
-        // Navigate to home on successful login
-        navigation.navigate("HomeTabs");
+        Alert.alert(
+          "Success",
+          "Account created successfully!",
+          [{ text: "OK", onPress: () => navigation.navigate("HomeTabs") }]
+        );
       } else {
-        Alert.alert("Login Failed", response.message);
+        Alert.alert("Registration Failed", response.message);
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Registration error:", error);
       Alert.alert("Error", "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    // Navigate to forgot password screen
-    console.log("Forgot password");
-  };
-
-  const handleSignUp = () => {
-    // Navigate to sign up screen
-    navigation.navigate("SignUp");
+  const handleLogin = () => {
+    // Navigate to login screen
+    navigation.navigate("Login");
   };
 
   return (
@@ -124,7 +149,7 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
           </View>
         </View>
 
-        {/* Login form */}
+        {/* Signup form */}
         <Animated.View
           style={[
             styles.formContainer,
@@ -134,8 +159,24 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             }
           ]}
         >
-          <Text style={styles.welcomeText}>Welcome Back</Text>
-          <Text style={styles.subtitleText}>Sign in to continue</Text>
+          <Text style={styles.welcomeText}>Create Account</Text>
+          <Text style={styles.subtitleText}>Sign up to get started</Text>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Name</Text>
+            <TextInput
+              style={[styles.input, nameError ? styles.inputError : null]}
+              placeholder="Enter your name"
+              placeholderTextColor="#999"
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                setNameError("");
+              }}
+              autoCapitalize="words"
+            />
+            {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+          </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -178,22 +219,39 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
           </View>
 
-          <TouchableOpacity
-            onPress={handleForgotPassword}
-            style={styles.forgotPasswordContainer}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <View style={[styles.passwordContainer, confirmPasswordError ? styles.inputError : null]}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Confirm your password"
+                placeholderTextColor="#999"
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  setConfirmPasswordError("");
+                }}
+                secureTextEntry={!isConfirmPasswordVisible}
+              />
+              <TouchableOpacity
+                onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
+                style={styles.eyeIcon}
+              >
+                <Text>{isConfirmPasswordVisible ? "🙈" : "👁️"}</Text>
+              </TouchableOpacity>
+            </View>
+            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+          </View>
 
           <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
+            style={styles.signupButton}
+            onPress={handleSignUp}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="white" size="small" />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.signupButtonText}>Sign Up</Text>
             )}
           </TouchableOpacity>
 
@@ -215,10 +273,10 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={handleSignUp}>
-              <Text style={styles.signupLink}>Sign Up</Text>
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={handleLogin}>
+              <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -319,23 +377,15 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 15,
   },
-  forgotPasswordContainer: {
-    alignItems: "flex-end",
-    marginBottom: 30,
-  },
-  forgotPasswordText: {
-    color: "#2F614A",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  loginButton: {
+  signupButton: {
     backgroundColor: "#2F614A",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 20,
+    marginTop: 10,
   },
-  loginButtonText: {
+  signupButtonText: {
     color: "white",
     fontSize: 18,
     fontWeight: "500",
@@ -374,16 +424,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
-  signupContainer: {
+  loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 20,
   },
-  signupText: {
+  loginText: {
     color: "#666",
     fontSize: 16,
   },
-  signupLink: {
+  loginLink: {
     color: "#2F614A",
     fontSize: 16,
     fontWeight: "bold",
@@ -399,4 +449,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default SignUpScreen;
