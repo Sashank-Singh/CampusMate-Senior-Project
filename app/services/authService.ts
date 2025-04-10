@@ -1,6 +1,12 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { executeSql } from './apiClient';
+import { executeSql, testConnection } from './apiClient';
+
+// Log database status on import
+testConnection().then(() => {
+  console.log('Using in-memory database for development');
+  console.log('User data will not be persisted between app restarts');
+});
 
 // Interface for user data
 export interface User {
@@ -47,7 +53,7 @@ export const registerUser = async (
       };
     }
 
-    if (checkUserResult.data?.rows?.length > 0) {
+    if (checkUserResult.data?.rows && checkUserResult.data.rows.length > 0) {
       return {
         success: false,
         message: 'User with this email already exists'

@@ -13,6 +13,7 @@ import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
 import LoginScreen from './(auth)/LoginScreen';
 import SignUpScreen from './(auth)/SignUpScreen';
+import ARNavigator from "./(tabs)/ARNavigator";
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 const Stack = createStackNavigator();
@@ -47,6 +48,7 @@ const HomeTabs = () => {
       <Tab.Screen name="Courses" component={CoursesScreen} />
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="AR" component={ARNavigator} />
     </Tab.Navigator>
   );
 };

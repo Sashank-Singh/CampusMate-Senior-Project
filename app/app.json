@@ -23,6 +23,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
         "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule."
+      },
+      "config": {
+        "googleMapsApiKey": "AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM"
       }
     },
     "android": {
@@ -34,7 +37,12 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -42,11 +50,25 @@
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "DATABASE_URL": "postgresql://CampusMate_owner:npg_xgO48UVpqcSk@ep-dry-tooth-a5dza69l-pooler.us-east-2.aws.neon.tech/CampusMate?sslmode=require",
+      "EXPO_PUBLIC_NEON_API_URL": "process.env.EXPO_PUBLIC_NEON_API_URL",
+      "EXPO_PUBLIC_NEON_USERNAME": "process.env.EXPO_PUBLIC_NEON_USERNAME",
+      "EXPO_PUBLIC_NEON_PASSWORD": "process.env.EXPO_PUBLIC_NEON_PASSWORD",
       "apiUrl": "https://openrouter.ai/api/v1/chat/completions"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow CampusMate to access your camera to use the AR Navigator"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CampusMate to use your location for campus navigation"
+        }
+      ]
     ],
     "platforms": [
       "ios",
