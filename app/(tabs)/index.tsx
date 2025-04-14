@@ -141,14 +141,10 @@ const HomeScreen = () => {
               style={styles.linkCard}
               onPress={() => handleLinkPress(link.url)}
             >
-              <LinearGradient
-                colors={['#ffffff', '#f5f5f5']}
-                style={styles.cardGradient}
-              >
+              <View style={styles.cardGradient}>
                 <Ionicons name={link.icon} size={32} color="#4CAF50" />
                 <Text style={styles.linkTitle}>{link.title}</Text>
-                <Ionicons name="chevron-forward" size={24} color="#757575" />
-              </LinearGradient>
+              </View>
             </Pressable>
           ))}
         </View>
@@ -230,7 +226,17 @@ const styles = StyleSheet.create({
   appName: { fontSize: 42, fontWeight: 'bold', color: '#ffffff', marginVertical: 8 },
   universityName: { fontSize: 24, color: '#E8F5E9', fontWeight: '600' },
   quickLinksContainer: { padding: 16 },
-  linkCard: { marginBottom: 12, borderRadius: 16, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, borderWidth: 2, borderColor: '#FFFFFF' },
+  linkCard: {
+    marginBottom: 12,
+    borderRadius: 26, // Smooth rounded corners
+    overflow: 'hidden', // Ensures content respects the rounded corners
+    backgroundColor: '#424242', // Pure white background
+    shadowColor: '#000', // Subtle shadow
+    shadowOffset: { width: 0, height: 2 }, // Light shadow offset
+    shadowOpacity: 0.1, // Light shadow transparency
+    shadowRadius: 4, // Small shadow blur radius
+    elevation: 2, // Light elevation for Android shadow
+  },
   cardGradient: { flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: '#ffffff' },
   linkTitle: { flex: 1, fontSize: 18, fontWeight: '600', color: '#424242', marginLeft: 16 },
   modalContainer: { flex: 1, backgroundColor: '#F5F5F5' },
