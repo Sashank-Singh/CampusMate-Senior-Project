@@ -1,273 +1,144 @@
-// app/(tabs)/ExploreScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  ScrollView,
+  Pressable,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import CampusLocationModal from './../components/CampusLocationModal';
-
-// Define location data
-const locationData = {
-  library: {
-    title: 'Library',
-    icon: 'library',
-    description: "The campus library is a state-of-the-art facility designed to support student learning and research. With multiple floors of study spaces, extensive collections, and digital resources, it serves as the intellectual hub of the university.",
-    details: {
-      hours: 'Monday-Friday: 7:00 AM - 12:00 AM\nSaturday-Sunday: 9:00 AM - 10:00 PM\nExtended hours during finals week',
-      location: 'Central Campus, Building 12\nNext to the Student Union',
-      amenities: [
-        'Silent study areas',
-        'Group study rooms',
-        'Computer labs',
-        'Printing services',
-        'Research assistance',
-        'Coffee shop'
-      ],
-      contact: 'Phone: (555) 123-4567\nEmail: library@university.edu'
-    }
-  },
-  cafeteria: {
-    title: 'Cafeteria',
-    icon: 'restaurant',
-    description: "Our campus cafeteria offers a diverse range of dining options to satisfy every palate. From healthy salads to comfort food, international cuisine to grab-and-go snacks, we provide nutritious and delicious meals for the entire campus community.",
-    details: {
-      hours: 'Breakfast: 7:00 AM - 10:30 AM\nLunch: 11:00 AM - 2:30 PM\nDinner: 5:00 PM - 9:00 PM\nGrab & Go: 7:00 AM - 9:00 PM',
-      location: 'North Campus, Dining Hall\nFirst floor of Residence Hall A',
-      amenities: [
-        'Multiple food stations',
-        'Vegetarian and vegan options',
-        'Allergen-free zone',
-        'Meal plan accepted',
-        'Mobile ordering',
-        'Outdoor seating area'
-      ],
-      contact: 'Phone: (555) 123-8910\nEmail: dining@university.edu'
-    }
-  },
-  gym: {
-    title: 'Gym',
-    icon: 'fitness',
-    description: "The campus recreation center features modern fitness equipment, group exercise studios, and athletic facilities to promote health and wellness. Whether you're a casual exerciser or competitive athlete, our gym has everything you need for your fitness journey.",
-    details: {
-      hours: 'Monday-Friday: 6:00 AM - 11:00 PM\nSaturday-Sunday: 8:00 AM - 9:00 PM\nPool hours may vary',
-      location: 'West Campus, Recreation Center\nAdjacent to the Athletic Fields',
-      amenities: [
-        'Cardio and weight equipment',
-        'Indoor track',
-        'Swimming pool',
-        'Basketball courts',
-        'Group fitness classes',
-        'Personal training services'
-      ],
-      contact: 'Phone: (555) 123-5678\nEmail: recreation@university.edu'
-    }
-  },
-  studentCenter: {
-    title: 'Student Center',
-    icon: 'people',
-    description: "The Student Center is the heart of campus life, offering spaces for socializing, studying, and accessing essential services. It houses student organizations, administrative offices, and various amenities to enhance your college experience.",
-    details: {
-      hours: 'Monday-Friday: 7:00 AM - 11:00 PM\nSaturday-Sunday: 9:00 AM - 10:00 PM',
-      location: 'Central Campus, Student Union Building\nBetween the Quad and Main Hall',
-      amenities: [
-        'Student organization offices',
-        'Lounge areas',
-        'Game room',
-        'Meeting spaces',
-        'Campus store',
-        'Banking services',
-        'Information desk'
-      ],
-      contact: 'Phone: (555) 123-9012\nEmail: studentcenter@university.edu'
-    }
-  }
-};
 
 const ExploreScreen = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const openModal = (location: string) => {
-    setSelectedLocation(location);
-    setModalVisible(true);
-  };
-
-  const closeModal = () => {
-    setModalVisible(false);
-  };
+  const exploreItems = [
+    {
+      id: '1',
+      title: 'Library',
+      icon: 'book-outline',
+    },
+    {
+      id: '2',
+      title: 'Cafeteria',
+      icon: 'restaurant-outline',
+    },
+    {
+      id: '3',
+      title: 'Gym',
+      icon: 'fitness-outline',
+    },
+    {
+      id: '4',
+      title: 'Student Center',
+      icon: 'home-outline',
+    },
+  ];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <LinearGradient
-          colors={['#1B5E20', '#4CAF50']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-            <Text style={styles.headerSmall}>Discover</Text>
-            <Text style={styles.header}>Explore Campus</Text>
-          </View>
-        </LinearGradient>
+    <View style={styles.container}>
+      {/* Header Section */}
+      <LinearGradient colors={['#1B5E20', '#4CAF50']} style={styles.header}>
+        <Text style={styles.headerTitle}>Explore</Text>
+        <Text style={styles.headerSubtitle}>
+          Discover essential services and facilities on campus.
+        </Text>
+      </LinearGradient>
 
-        <View style={styles.content}>
-          <TouchableOpacity  
-            style={styles.card}
-            onPress={() => openModal('library')}
-          >
-            <LinearGradient
-              colors={['#ffffff', '#f5f5f5']}
-              style={styles.cardGradient}
-            >
-              <View style={styles.iconContainer}>
-                <Ionicons name="library" size={32} color="#4CAF50" />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Library</Text>
-                <Text style={styles.cardDescription}>Study spaces, books, and resources</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="#757575" />
-            </LinearGradient>
-          </TouchableOpacity>
+      {/* Search Bar */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={20} color="#757575" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          value={searchQuery}
+          onChangeText={(text) => setSearchQuery(text)}
+        />
+      </View>
 
-          <TouchableOpacity 
-            style={styles.card}
-            onPress={() => openModal('cafeteria')}
-          >
-            <LinearGradient
-              colors={['#ffffff', '#f5f5f5']}
-              style={styles.cardGradient}
-            >
-              <View style={styles.iconContainer}>
-                <Ionicons name="restaurant" size={32} color="#4CAF50" />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Cafeteria</Text>
-                <Text style={styles.cardDescription}>Campus dining and meal options</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="#757575" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.card}
-            onPress={() => openModal('gym')}
-          >
-            <LinearGradient
-              colors={['#ffffff', '#f5f5f5']}
-              style={styles.cardGradient}
-            >
-              <View style={styles.iconContainer}>
-                <Ionicons name="fitness" size={32} color="#4CAF50" />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Gym</Text>
-                <Text style={styles.cardDescription}>Recreation center and fitness facilities</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="#757575" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.card}
-            onPress={() => openModal('studentCenter')}
-          >
-            <LinearGradient
-              colors={['#ffffff', '#f5f5f5']}
-              style={styles.cardGradient}
-            >
-              <View style={styles.iconContainer}>
-                <Ionicons name="people" size={32} color="#4CAF50" />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Student Center</Text>
-                <Text style={styles.cardDescription}>Student services and gathering spaces</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="#757575" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+      {/* Items List */}
+      <ScrollView contentContainerStyle={styles.gridContainer}>
+        {exploreItems.map((item) => (
+          <Pressable key={item.id} style={styles.card}>
+            <Ionicons name={item.icon} size={32} color="#4CAF50" />
+            <Text style={styles.cardTitle}>{item.title}</Text>
+          </Pressable>
+        ))}
       </ScrollView>
-
-      {/* Modal Component */}
-      <CampusLocationModal
-        visible={modalVisible}
-        onClose={closeModal}
-        locationInfo={selectedLocation ? locationData[selectedLocation as keyof typeof locationData] : null}
-      />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  headerGradient: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
-  headerContent: {
-    padding: 20,
-  },
-  headerSmall: {
-    fontSize: 16,
-    color: '#E8F5E9',
-    fontWeight: '500',
+    backgroundColor: '#232622',
   },
   header: {
-    fontSize: 42,
+    padding: 80, // Increased padding for a larger header
+    borderBottomLeftRadius: 30, // Smooth rounded corners
+    borderBottomRightRadius: 30,
+    marginBottom: -1,
+    alignItems: 'stretch', // Center-align the text
+  },
+  headerTitle: {
+    fontSize: 37, // Larger font size for the title
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 18, // Slightly larger subtitle
+    color: '#E8F5E9',
     marginTop: 8,
+    textAlign: 'center',
   },
-  content: {
-    padding: 16,
-    marginTop: -30,
-  },
-  card: {
-    marginBottom: 12,
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    margin: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    backgroundColor: '#ffffff',
+    shadowRadius: 4,
+    elevation: 2,
   },
-  cardGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardContent: {
+  searchInput: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#424242',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  card: {
+    width: '48%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardTitle: {
-    fontSize: 18,
+    marginTop: 8,
+    fontSize: 16,
     fontWeight: '600',
     color: '#424242',
-    marginBottom: 4,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#757575',
+    textAlign: 'center',
   },
 });
 
