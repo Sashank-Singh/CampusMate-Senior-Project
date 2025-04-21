@@ -3,7 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./Intropage";
 import ExploreScreen from "./(tabs)/explore";
@@ -11,9 +13,9 @@ import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Events";
 import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
-import LoginScreen from './(auth)/LoginScreen';
-import SignUpScreen from './(auth)/SignUpScreen';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import LoginScreen from "./(auth)/LoginScreen";
+import SignUpScreen from "./(auth)/SignUpScreen";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -24,7 +26,6 @@ const HomeTabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = "home-outline";
-
           if (route.name === "Home") {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "Explore") {
@@ -37,7 +38,6 @@ const HomeTabs = () => {
             iconName = focused ? "person" : "person-outline";
           }
 
-          // @ts-ignore - Ionicons has these icons but TypeScript doesn't know about them
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -51,20 +51,36 @@ const HomeTabs = () => {
   );
 };
 
-// Main navigation component
 const AppNavigator = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [splashLoading, setSplashLoading] = useState(true);
+  const [isFirstLaunch, setIsFirstLaunch] = useState<null | boolean>(null);
 
-  // Show splash screen initially
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+        if (hasLaunched === null) {
+          await AsyncStorage.setItem("hasLaunched", "true");
+          setIsFirstLaunch(true);
+        } else {
+          setIsFirstLaunch(false);
+        }
+      } catch (err) {
+        console.log("Error checking first launch:", err);
+        setIsFirstLaunch(false);
+      }
+    };
+    checkFirstLaunch();
+  }, []);
+
   if (splashLoading) {
     return <SplashScreen onFinish={() => setSplashLoading(false)} />;
   }
 
-  // Show loading indicator while checking authentication
-  if (isLoading) {
+  if (isLoading || isFirstLaunch === null) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#2F614A" />
       </View>
     );
@@ -72,15 +88,24 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={isAuthenticated ? "HomeTabs" : "Intropage"}>
+      <Stack.Navigator
+        initialRouteName={
+          !isAuthenticated
+            ? isFirstLaunch
+              ? "Intropage"
+              : "Login"
+            : "HomeTabs"
+        }
+      >
         {!isAuthenticated ? (
-          // Auth screens
           <>
-            <Stack.Screen
-              name="Intropage"
-              component={IntroScreen}
-              options={{ headerShown: false }}
-            />
+            {isFirstLaunch && (
+              <Stack.Screen
+                name="Intropage"
+                component={IntroScreen}
+                options={{ headerShown: false }}
+              />
+            )}
             <Stack.Screen
               name="Login"
               component={LoginScreen}
@@ -103,7 +128,6 @@ const AppNavigator = () => {
   );
 };
 
-// Root app component with AuthProvider
 const App = () => {
   return (
     <AuthProvider>
