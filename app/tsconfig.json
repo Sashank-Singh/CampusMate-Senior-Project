@@ -7,5 +7,5 @@
     },
     "types": ["jest", "react-native"]
   },
-  "include": ["**/*.ts", "**/*.tsx", "shim.js"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

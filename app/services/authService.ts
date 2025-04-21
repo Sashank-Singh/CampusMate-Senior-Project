@@ -47,7 +47,7 @@ export const registerUser = async (
       };
     }
 
-    if ((checkUserResult.data?.rows?.length ?? 0) > 0) {
+    if (checkUserResult.data?.rows?.length > 0) {
       return {
         success: false,
         message: "User with this email already exists",

@@ -8,7 +8,6 @@ import {
   ScrollView,
   Modal,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons"; // ✅ Fixed Import
 
 // Import local images
 const eventImages = {
@@ -18,7 +17,7 @@ const eventImages = {
   environment_summit: require("../assets/images/logo.png"),
 };
 
-type Tab = "ongoing" | "upcoming" | "past";
+type Tab = "ongoing" | "upcoming";
 
 const MobilePreview = () => {
   const [activeTab, setActiveTab] = useState<Tab>("ongoing");
@@ -35,9 +34,21 @@ const MobilePreview = () => {
     tags: string[];
     image: any;
   } | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
-  const events = {
+  const events: {
+    [key in Tab]: {
+      id: number;
+      title: string;
+      date: string;
+      time: string;
+      location: string;
+      description: string;
+      category: string;
+      attendees: number;
+      tags: string[];
+      image: any;
+    }[];
+  } = {
     ongoing: [
       {
         id: 1,
@@ -94,31 +105,12 @@ const MobilePreview = () => {
         image: eventImages.environment_summit,
       },
     ],
-    past: [
-      {
-        id: 5,
-        title: "Digital Marketing Conference",
-        date: "Jan 15, 2025",
-        time: "9:00 AM - 4:00 PM",
-        location: "Digital Hub Center",
-        description:
-          "A successful conference covering the latest digital marketing trends.",
-        category: "Marketing",
-        attendees: 275,
-        tags: ["Digital Marketing", "SEO", "Social Media"],
-        image: eventImages.tech_summit,
-      },
-    ],
   };
 
   const openModal = (event: any) => {
     setSelectedEvent(event);
     setModalVisible(true);
   };
-
-  const filteredEvents = events[activeTab].filter((event) =>
-    event.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
@@ -130,36 +122,18 @@ const MobilePreview = () => {
       {/* Search Bar */}
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
           backgroundColor: "#e0e0e0",
           borderRadius: 20,
           padding: 10,
           marginBottom: 16,
         }}
       >
-        <FontAwesome
-          name="search"
-          size={16}
-          color="gray"
-          style={{ marginRight: 8 }}
-        />
-        <TextInput
-          placeholder="Search events..."
-          style={{ fontSize: 16, flex: 1 }}
-          value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <FontAwesome name="times-circle" size={16} color="gray" />
-          </TouchableOpacity>
-        ) : null}
+        <TextInput placeholder="Search events..." style={{ fontSize: 16 }} />
       </View>
 
       {/* Tabs */}
       <View style={{ flexDirection: "row", marginBottom: 16 }}>
-        {["ongoing", "upcoming", "past"].map((tab) => (
+        {["ongoing", "upcoming"].map((tab) => (
           <TouchableOpacity
             key={tab}
             onPress={() => setActiveTab(tab as Tab)}
@@ -181,7 +155,7 @@ const MobilePreview = () => {
 
       {/* Event List */}
       <ScrollView>
-        {filteredEvents.map((event) => (
+        {events[activeTab].map((event) => (
           <TouchableOpacity
             key={event.id}
             onPress={() => openModal(event)}
@@ -201,14 +175,16 @@ const MobilePreview = () => {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
               {event.title}
             </Text>
-            <Text>{`${event.date} - ${event.time}`}</Text>
-            <Text>{event.location}</Text>
-            <Text>{event.attendees} attending</Text>
+            <Text>
+              {event.date} - {event.time}
+            </Text>
+            <Text>📍 {event.location}</Text>
+            <Text>👥 {event.attendees} attending</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Event Modal */}
+      {/* Event Details Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View
           style={{
@@ -240,13 +216,23 @@ const MobilePreview = () => {
                 >
                   {selectedEvent.title}
                 </Text>
-                <Text
-                  style={{ fontSize: 16, marginVertical: 5 }}
-                >{`${selectedEvent.date} | ${selectedEvent.time}`}</Text>
-                <Text style={{ fontSize: 16 }}>{selectedEvent.location}</Text>
+                <Text style={{ fontSize: 16, marginVertical: 5 }}>
+                  📅 {selectedEvent.date} | ⏰ {selectedEvent.time}
+                </Text>
+                <Text style={{ fontSize: 16 }}>
+                  📍 {selectedEvent.location}
+                </Text>
                 <Text style={{ marginVertical: 10 }}>
                   {selectedEvent.description}
                 </Text>
+                <Text style={{ fontWeight: "bold" }}>Category:</Text>
+                <Text>{selectedEvent.category}</Text>
+                <Text style={{ fontWeight: "bold", marginTop: 10 }}>Tags:</Text>
+                <Text>{selectedEvent.tags.join(", ")}</Text>
+                <Text style={{ fontWeight: "bold", marginTop: 10 }}>
+                  Attendees:
+                </Text>
+                <Text>👥 {selectedEvent.attendees}</Text>
                 <TouchableOpacity
                   onPress={() => setModalVisible(false)}
                   style={{

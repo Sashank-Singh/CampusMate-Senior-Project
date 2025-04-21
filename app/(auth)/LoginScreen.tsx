@@ -130,8 +130,8 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             styles.formContainer,
             {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <Text style={styles.welcomeText}>Welcome Back</Text>
@@ -151,12 +151,19 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Password</Text>
-            <View style={[styles.passwordContainer, passwordError ? styles.inputError : null]}>
+            <View
+              style={[
+                styles.passwordContainer,
+                passwordError ? styles.inputError : null,
+              ]}
+            >
               <TextInput
                 style={styles.passwordInput}
                 placeholder="Enter your password"
@@ -175,7 +182,9 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
                 <Text>{isPasswordVisible ? "🙈" : "👁️"}</Text>
               </TouchableOpacity>
             </View>
-            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            {passwordError ? (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            ) : null}
           </View>
 
           <TouchableOpacity
@@ -195,6 +204,13 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             ) : (
               <Text style={styles.loginButtonText}>Login</Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.loginButton, { backgroundColor: "#4CAF50" }]}
+            onPress={() => navigation.navigate("HomeTabs")}
+          >
+            <Text style={styles.loginButtonText}>Demo Entry</Text>
           </TouchableOpacity>
 
           <View style={styles.dividerContainer}>
