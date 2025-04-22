@@ -81,9 +81,9 @@ const HomeScreen = () => {
 
   const quickLinks: QuickLink[] = [
     { id: '1', title: 'University Website', url: 'https://www.csuohio.edu', icon: 'school-outline' },
-    { id: '2', title: 'Student Portal', url: 'https://mycsu.csuohio.edu', icon: 'person-outline' },
-    { id: '3', title: 'Campus Events', url: 'https://csuohio.presence.io/events', icon: 'calendar-outline' },
-    { id: '4', title: 'Library', url: 'https://library.csuohio.edu', icon: 'book-outline' }, // replaced 'library' with valid icon
+    { id: '2', title: 'Student Portal', url: 'https://campusnet.csuohio.edu', icon: 'person-outline' },
+    { id: '3', title: 'Blackboard', url: 'https://login.microsoftonline.com/d7f3e79a-943d-4ace-aeab-209030807508/saml2?SAMLRequest=pZJPT%2BMwEMW%2FSuS7E%2BdPm9ZqisoitEggKhL2wAVNnGnq3cQuHqfaj78hbQVcuOzFkuWZ92bez6urv30XHNGRtqZgcShYgEbZRpu2YM%2FVLV%2Bwq%2FWKoO%2BSg9wMfm%2Be8G1A8sHYaEieXgo2OCMtkCZpoEeSXsly83Avk1DIg7PeKtuxYEOEzo9WP6yhoUdXojtqhc9P9wXbe38gGUV1zRUNdq9tWHeg%2FtQWXBMq20cw%2BvN3x2g6yvIxgk4DRa9Jmr3GLLgZB9MG%2FLTMRa%2BzrTZhr5WzZHfemk4bnPSafJdivgS%2BzNKGZ6CQA0LNE7EUqViIfCYWk1XCglvrFE4BFGwHHSEL7m4KBnGtoIlbEE2d79U8xmyh4jkmKNrfu3Ysoi0Q6SN%2BtBENeGfIg%2FEFS0Qy4yLj8byKZzJdSiHCPJ29sGB7ju1amxOO7zKuT0Ukf1bVlm8fy4oFvy5YxwJ2hignd%2FeZ3vfCcEHG1v8NaBV9nmF9vn79V%2Bt%2F&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=f8Rf7OBPRsU5Ztg0%2B2%2BsQHvWX0ctK8Q7rikvPrSBEvE9cR22Qgj9GOHbZpkOciD8JpR20%2F%2F38niPbDh3H1zy8Ng4de82uD%2Bu6mjB9vTP0P9ouc5KvTgulrhb133a8qmZ3XF5DmCgCDFbUjSkkTiat1zAlDS8hrvNZsWn%2Feo8lu0EIcxBXD5pGFwlkl%2FPqzDkD6qYwyjvR0bsYLawPbD6W9%2BKHMSk7KjucUSDX5hXK94ubnyJbzMY6HA9TNqUOv62%2BNCYiuCXGGgVpoNy2NFo1lVOMrojnfd9cWj7HjkIzuQcPdBJPQ5Zf6ua5aWXaPlYyGl06hSB4QsYQ30lnIlTBA%3D%3D', icon: 'book-outline' },
+    { id: '4', title: 'Library', url: 'https://www.csuohio.edu/library', icon: 'book-outline' },
   ];
 
   const handleLinkPress = (url: string) => setSelectedUrl(url);
@@ -301,10 +301,10 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     paddingTop: 100,
-    paddingBottom: 80,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    marginBottom: 20,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 35,
+    borderBottomRightRadius: 35,
+    marginBottom: 10,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -317,13 +317,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   welcomeSmall: {
-    fontSize: 22,
-    color: '#E8F5E9',
-    fontWeight: '500',
-    letterSpacing: 1,
+    fontSize: 20, // Slightly larger font size
+    textAlign: 'center', // Center-align the text
+    marginBottom: 10, // Space below the text
+    textShadowColor: 'rgba(0, 0, 0, 0.2)', // Subtle shadow
+    textShadowOffset: { width: 0, height: 1 }, // Subtle shadow offset
+    textShadowRadius: 2, // Smaller shadow radius
+    fontFamily: 'Roboto', // Use a custom font if available
+    color: '#F0F0F0', // Softer white color
+    fontWeight: '600', // Medium weight for better readability
+    letterSpacing: 1.2, // Slightly increased letter spacing
   },
   appName: {
-    fontSize: 50,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginVertical: 10,
@@ -334,14 +340,14 @@ const styles = StyleSheet.create({
   },
   universityName: {
     fontSize: 26,
-    color: '#C8E6C9',
+    color: '#FFFFFF',
     fontWeight: '600',
     textAlign: 'center',
     marginTop: 8,
   },
   quickLinksContainer: { padding: 16 },
   linkCard: {
-    marginBottom: 12,
+    marginBottom: 15,
     borderRadius: 30, // Smooth rounded corners
     overflow: 'hidden', // Ensures content respects the rounded corners
     backgroundColor: '#424242', // Pure white background

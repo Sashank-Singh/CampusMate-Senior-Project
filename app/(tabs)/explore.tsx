@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#232622',
   },
   header: {
-    padding: 80, // Increased padding for a larger header
+    padding: 85, // Increased padding for a larger header
     borderBottomLeftRadius: 30, // Smooth rounded corners
     borderBottomRightRadius: 30,
     marginBottom: -1,
@@ -123,8 +123,8 @@ const styles = StyleSheet.create({
   card: {
     width: '48%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
     alignItems: 'center',
     shadowColor: '#000',
@@ -134,8 +134,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   cardTitle: {
-    marginTop: 8,
-    fontSize: 16,
+    marginTop: 7,
+    fontSize: 15,
     fontWeight: '600',
     color: '#424242',
     textAlign: 'center',
