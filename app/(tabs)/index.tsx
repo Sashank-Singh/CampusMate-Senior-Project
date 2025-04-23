@@ -119,7 +119,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="light" />
-      <View style={styles.container}>
+      <View style={{ flex: 1 }}>
         {/* Menu Button */}
         <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
           <Ionicons name="menu-outline" size={28} color="#FFFFFF" />
@@ -145,7 +145,7 @@ const HomeScreen = () => {
         )}
 
         <ScrollView
-          style={styles.container}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           <LinearGradient
@@ -209,7 +209,11 @@ const HomeScreen = () => {
                 onPress={() => handleLinkPress(link.url)}
               >
                 <View style={styles.cardGradient}>
-                  <Ionicons name={link.icon} size={32} color="#4CAF50" />
+                  <Ionicons
+                    name={link.icon as string}
+                    size={32}
+                    color="#4CAF50"
+                  />
                   <Text style={styles.linkTitle}>{link.title}</Text>
                 </View>
               </Pressable>
@@ -303,6 +307,8 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     position: "absolute",
+    top: 50, // gives space from the top
+    left: 16,
     zIndex: 10,
     backgroundColor: "#242624",
     padding: 10,
@@ -313,6 +319,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+
   menuContainer: {
     position: "absolute",
     top: 0, // Adjust this to move the menu vertically
@@ -402,6 +409,10 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#ffffff",
   },
+  scrollContent: {
+    paddingBottom: 100, // prevents content from being cut off
+  },
+
   linkTitle: {
     flex: 1,
     fontSize: 18,
