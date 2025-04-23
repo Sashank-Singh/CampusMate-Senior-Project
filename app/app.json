@@ -22,7 +22,16 @@
       "bundleIdentifier": "com.campusmate.app",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
-        "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule."
+        "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule.",
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location for campus navigation.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to your location for campus navigation.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "campusmate"
+            ]
+          }
+        ]
       },
       "config": {
         "googleMapsApiKey": "AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM"
@@ -36,7 +45,26 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "campusmate"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ],
       "config": {
         "googleMaps": {
@@ -53,7 +81,16 @@
       "EXPO_PUBLIC_NEON_API_URL": "process.env.EXPO_PUBLIC_NEON_API_URL",
       "EXPO_PUBLIC_NEON_USERNAME": "process.env.EXPO_PUBLIC_NEON_USERNAME",
       "EXPO_PUBLIC_NEON_PASSWORD": "process.env.EXPO_PUBLIC_NEON_PASSWORD",
-      "apiUrl": "https://openrouter.ai/api/v1/chat/completions"
+      "apiUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "blackboardConfig": {
+        "domain": "YOUR_SCHOOL_DOMAIN.blackboard.com",
+        "clientId": "YOUR_CLIENT_ID",
+        "callbackUrl": "campusmate://auth/callback"
+      },
+      "eas": {
+        "projectId": "238e8131-a854-44cd-9cc7-f97c3273b809"
+      },
+      "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
     },
     "plugins": [
       "expo-font",
@@ -68,13 +105,18 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow CampusMate to use your location for campus navigation"
         }
+      ],
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Allow CampusMate to use Face ID for secure authentication"
+        }
       ]
     ],
     "platforms": [
       "ios",
       "android"
     ],
-
-    "newArchEnabled": true
+    "newArchEnabled": false
   }
 }

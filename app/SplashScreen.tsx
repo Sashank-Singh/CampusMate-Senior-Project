@@ -50,10 +50,10 @@ const SplashScreen = ({ onFinish }: { onFinish: () => void }) => {
           duration: 600,
           useNativeDriver: true,
         }).start(() => {
-          // Ensure text stays visible for at least 4s before proceeding
+          // Ensure text stays visible for at least 5s before proceeding
           setTimeout(() => {
             if (onFinish) onFinish();
-          }, 4000);
+          }, 3000);
         });
       });
     });

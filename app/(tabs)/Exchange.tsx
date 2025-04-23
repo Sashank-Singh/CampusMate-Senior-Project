@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import BlackboardIntegration from '../components/BlackboardIntegration';
 
 // Import local images
 const images = {
@@ -242,6 +243,9 @@ const AcademicsExchange = () => {
 
   const renderAcademicsContent = () => (
     <ScrollView>
+      {/* Blackboard Integration */}
+      <BlackboardIntegration />
+      
       <View style={styles.summaryContainer}>
         <Text style={styles.sectionTitle}>Degree Progress</Text>
         <View style={styles.progressContainer}>

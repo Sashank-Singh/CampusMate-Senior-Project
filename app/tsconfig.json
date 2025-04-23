@@ -8,8 +8,7 @@
       ]
     },
     "types": [
-      "jest",
-      "react-native"
+      "jest"
     ]
   },
   "include": [
