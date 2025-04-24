@@ -3,19 +3,19 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { View, ActivityIndicator } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { View, ActivityIndicator, Alert } from 'react-native';
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./Intropage";
 import ExploreScreen from "./(tabs)/explore";
 import CoursesScreen from "./(tabs)/Courses";
-import EventsScreen from "./(tabs)/Events";
+import EventsScreen from "./(tabs)/Exchange";
 import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
-import LoginScreen from "./(auth)/LoginScreen";
-import SignUpScreen from "./(auth)/SignUpScreen";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import LoginScreen from './(auth)/LoginScreen';
+import SignUpScreen from './(auth)/SignUpScreen';
+import ARNavigator from "./(tabs)/ARNavigator";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import BlackboardAuth from './(auth)/BlackboardAuth';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,8 +32,8 @@ const HomeTabs = () => {
             iconName = focused ? "search" : "search-outline";
           } else if (route.name === "Courses") {
             iconName = focused ? "book" : "book-outline";
-          } else if (route.name === "Events") {
-            iconName = focused ? "calendar" : "calendar-outline";
+          } else if (route.name === "Exchange") {
+            iconName = focused ? "swap-horizontal" : "swap-horizontal-outline";
           } else if (route.name === "Profile") {
             iconName = focused ? "person" : "person-outline";
           }
@@ -45,8 +45,9 @@ const HomeTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Courses" component={CoursesScreen} />
-      <Tab.Screen name="Events" component={EventsScreen} />
+      <Tab.Screen name="Exchange" component={EventsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="AR" component={ARNavigator} />
     </Tab.Navigator>
   );
 };
@@ -87,51 +88,48 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={
-          !isAuthenticated
-            ? isFirstLaunch
-              ? "Intropage"
-              : "Login"
-            : "HomeTabs"
-        }
-      >
-        {!isAuthenticated ? (
-          <>
-            {isFirstLaunch && (
-              <Stack.Screen
-                name="Intropage"
-                component={IntroScreen}
-                options={{ headerShown: false }}
-              />
-            )}
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="SignUp"
-              component={SignUpScreen}
-              options={{ headerShown: false }}
-            />
-          </>
-        ) : null}
-        <Stack.Screen
-          name="HomeTabs"
-          component={HomeTabs}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator initialRouteName={isAuthenticated ? "HomeTabs" : "Intropage"}>
+      {!isAuthenticated ? (
+        // Auth screens
+        <>
+          <Stack.Screen
+            name="Intropage"
+            component={IntroScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="SignUp"
+            component={SignUpScreen}
+            options={{ headerShown: false }}
+          />
+        </>
+      ) : null}
+      <Stack.Screen
+        name="HomeTabs"
+        component={HomeTabs}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="BlackboardAuth" 
+        component={BlackboardAuth} 
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
   );
 };
 
+// Root app component with AuthProvider and NavigationContainer
 const App = () => {
   return (
     <AuthProvider>
-      <AppNavigator />
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
     </AuthProvider>
   );
 };

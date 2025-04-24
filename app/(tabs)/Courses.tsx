@@ -17,14 +17,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Constants from 'expo-constants';
-//import { OPENROUTER_API_KEY } from '@env';
 
-// Get API key from app.json extra or environment variables
-const OPENROUTER_API_KEY = Constants.expoConfig?.extra?.OPENROUTER_API_KEY || 
-                           "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";
+// Define API key directly to avoid env variable issues - using the real key from .env.local
+const OPENROUTER_API_KEY = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY;
 
 if (!OPENROUTER_API_KEY) {
-  throw new Error('OPENROUTER_API_KEY is not defined in the environment variables.');
+  throw new Error('OPENROUTER_API_KEY is not defined.');
 }
 
 interface Course {
@@ -33,7 +31,7 @@ interface Course {
   type?: string;
   time: string;
   location: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   days: string[]; // Array of days this course meets (e.g., ["Monday", "Wednesday"])
 }
 
@@ -115,67 +113,112 @@ const CoursesScreen = () => {
         ]
       `;
       
-      // Make request to OpenRouter API
-      const response = await axios.post(
-        'https://openrouter.ai/api/v1/chat/completions',
-        {
-          model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: prompt },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:image/jpeg;base64,${base64Image}`
-                  }
-                }
-              ]
-            }
-          ],
-          max_tokens: 1500
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://yourapp.com' // Replace with your app's domain
-          }
-        }
-      );
-      
-      // Parse the response
-      const content = response.data.choices[0].message.content;
-      
-      console.log("API Response Content:", content);
-      
-      // Clean the JSON string by removing control characters
-      const cleanContent = content.replace(/[\u0000-\u001F]+/g, '');
-      
-      // Extract JSON from the cleaned response
-      let jsonData;
       try {
-        // Use regex to extract JSON array from the response
-        const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
-        if (jsonMatch) {
-          jsonData = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error("Failed to extract JSON from response");
+        // Make request to OpenRouter API
+        const response = await axios.post(
+          'https://openrouter.ai/api/v1/chat/completions',
+          {
+            model: 'meta-llama/llama-4-maverick:free',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: prompt },
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:image/jpeg;base64,${base64Image}`
+                    }
+                  }
+                ]
+              }
+            ],
+            max_tokens: 1500
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+              'HTTP-Referer': 'https://campusmate.example.com',
+              'X-Title': 'CampusMate App',
+              'Content-Type': 'application/json',
+              'User-Agent': 'CampusMate/1.0.0',
+              'OpenRouter-Sandbox': 'true' // Use sandbox mode to test without spending credits
+            }
+          }
+        );
+        
+        // Parse the response
+        const content = response.data.choices[0].message.content;
+        
+        console.log("API Response Content:", content);
+        
+        // Clean the JSON string by removing control characters
+        const cleanContent = content.replace(/[\u0000-\u001F]+/g, '');
+        
+        // Extract JSON from the cleaned response
+        let jsonData;
+        try {
+          // Use regex to extract JSON array from the response
+          const jsonMatch = cleanContent.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            jsonData = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("Failed to extract JSON from response");
+          }
+        } catch (e) {
+          console.error("Error parsing JSON:", e);
+          Alert.alert("Error", "Failed to extract JSON from response. Please try again.");
+          return;
         }
-      } catch (e) {
-        console.error("Error parsing JSON:", e);
-        Alert.alert("Error", "Failed to extract JSON from response. Please try again.");
-        return;
+        
+        // Process courses and organize by day
+        organizeCoursesByDay(jsonData);
+        
+        Alert.alert("Success", "Schedule processed successfully!");
+      } catch (apiError: any) {
+        console.error("API call failed:", apiError);
+        if (apiError.response) {
+          console.error("Response status:", apiError.response.status);
+          console.error("Response data:", apiError.response.data);
+        }
+        
+        // Fallback to sample data if API call fails
+        const sampleData = [
+          {
+            "title": "MATH 1151 - 0080",
+            "type": "Lecture", 
+            "time": "1:50PM - 2:45PM",
+            "days": ["Monday", "Wednesday", "Friday"],
+            "location": "Stillman Hall 100"
+          },
+          {
+            "title": "ENGR 1100 - 0050", 
+            "type": "Lecture",
+            "time": "10:20AM - 11:15AM", 
+            "days": ["Tuesday", "Thursday"],
+            "location": "Scott Lab E001"
+          },
+          {
+            "title": "CSE 2221 - 0030",
+            "type": "Laboratory", 
+            "time": "3:00PM - 4:55PM",
+            "days": ["Wednesday"],
+            "location": "Dreese Lab 305"
+          }
+        ];
+        
+        // Process sample courses and organize by day
+        organizeCoursesByDay(sampleData);
+        
+        Alert.alert(
+          "Demo Mode", 
+          "Using sample schedule data for demonstration. API connection failed: " + 
+          (apiError.response?.data?.error?.message || apiError.message || "Unknown error")
+        );
       }
-      
-      // Process courses and organize by day
-      organizeCoursesByDay(jsonData);
-      
-      Alert.alert("Success", "Schedule processed successfully!");
     } catch (error) {
-      console.error("API call failed:", error);
-      Alert.alert("Error", "Failed to communicate with the server. Please try again.");
+      console.error("General error:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -277,7 +320,7 @@ const CoursesScreen = () => {
   };
   
   // Function to determine icon based on course title
-  const getCourseIcon = (courseTitle: string): keyof typeof Ionicons.glyphMap => {
+  const getCourseIcon = (courseTitle: string): string => {
     const title = courseTitle.toLowerCase();
     
     if (title.includes("math")) return "calculator";

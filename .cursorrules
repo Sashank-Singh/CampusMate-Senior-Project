@@ -1,4 +1,4 @@
-# Cursor Rules
+<!-- # Cursor Rules
 
 ## Cursor Behavior
 - Cursor should be visible at all times during text editing
@@ -28,4 +28,4 @@
 ## Accessibility
 - Cursor should be configurable for high-contrast mode
 - Cursor size should be adjustable for visibility needs
-- Cursor blink rate should be configurable, including option to disable blinking
+- Cursor blink rate should be configurable, including option to disable blinking -->

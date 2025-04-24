@@ -9,8 +9,13 @@
       "ios",
       "android"
     ],
-    "ios": {
-      "bundleIdentifier": "com.anonymous.campusmate"
-    }
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow CampusMate to use your location."
+        }
+      ]
+    ]
   }
 }

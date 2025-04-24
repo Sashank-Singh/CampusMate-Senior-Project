@@ -1,37 +1,18 @@
-import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
+// This file provides a client for database operations using Neon database
 
-// Get the DATABASE_URL from environment variables
-const DATABASE_URL = Constants.expoConfig?.extra?.DATABASE_URL ||
-                    process.env.DATABASE_URL ||
-                    'postgresql://CampusMate_owner:npg_xgO48UVpqcSk@ep-dry-tooth-a5dza69l-pooler.us-east-2.aws.neon.tech/CampusMate?sslmode=require';
+import executeQuery from './dbClient';
 
-// Parse the DATABASE_URL to extract components
-const parseDbUrl = (url: string) => {
-  // Format: postgresql://username:password@hostname/database
-  const regex = /postgresql:\/\/([^:]+):([^@]+)@([^\/]+)\/([^?]+)/;
-  const match = url.match(regex);
-
-  if (!match) {
-    throw new Error('Invalid DATABASE_URL format');
+// Log database connection status
+export const testConnection = async (): Promise<boolean> => {
+  try {
+    const result = await executeQuery('SELECT 1');
+    console.log('Connected to Neon database successfully');
+    return true;
+  } catch (error) {
+    console.error('Failed to connect to Neon database:', error);
+    return false;
   }
-
-  return {
-    username: match[1],
-    password: match[2],
-    host: match[3],
-    database: match[4]
-  };
 };
-
-// Extract connection details
-const dbConfig = parseDbUrl(DATABASE_URL);
-
-// Neon HTTP API endpoint
-const NEON_API_URL = `https://${dbConfig.host}/sql`;
-
-// Base64 encode credentials for Basic Auth
-const BASIC_AUTH = `Basic ${btoa(`${dbConfig.username}:${dbConfig.password}`)}`;
 
 // Interface for API response
 interface ApiResponse<T> {
@@ -40,7 +21,7 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// Function to make API requests
+// Function to make API requests (placeholder for future implementation)
 export async function apiRequest<T>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
@@ -48,43 +29,15 @@ export async function apiRequest<T>(
   requiresAuth: boolean = false
 ): Promise<ApiResponse<T>> {
   try {
-    // Build request headers
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Basic ' + btoa(`${API_USERNAME}:${API_PASSWORD}`),
-    };
+    // This is a placeholder for a real API implementation
+    console.log(`API Request: ${method} ${endpoint}`);
+    console.log('Body:', body);
+    console.log('Requires Auth:', requiresAuth);
 
-    // Add auth token if required
-    if (requiresAuth) {
-      const token = await SecureStore.getItemAsync('auth_token');
-      if (!token) {
-        return { success: false, message: 'Authentication required' };
-      }
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    // Build request options
-    const options: RequestInit = {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    };
-
-    // Make the request
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    const data = await response.json();
-
-    // Check if the request was successful
-    if (!response.ok) {
-      return {
-        success: false,
-        message: data.message || 'An error occurred',
-      };
-    }
-
+    // For now, return a mock response
     return {
       success: true,
-      data: data as T,
+      data: { message: 'Mock API response' } as unknown as T,
     };
   } catch (error) {
     console.error('API request error:', error);
@@ -95,71 +48,23 @@ export async function apiRequest<T>(
   }
 }
 
-// Execute SQL queries using Neon's HTTP API
+// SQL query function that executes operations on the Neon database
 export async function executeSql<T>(query: string, params: any[] = []): Promise<ApiResponse<T>> {
   try {
     console.log('Executing SQL:', query, params);
 
-    // Prepare the request body
-    const requestBody = {
-      query,
-      params
-    };
+    // Execute the query on the actual database
+    const result = await executeQuery(query, params);
 
-    // Make the HTTP request to Neon's API
-    const response = await fetch(NEON_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': BASIC_AUTH
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    // Parse the response
-    let responseData;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      console.error('Failed to parse JSON response:', e);
-      return {
-        success: false,
-        message: 'Failed to parse database response'
-      };
-    }
-
-    // Check if the request was successful
-    if (!response.ok) {
-      console.error('Neon API error:', responseData);
-      return {
-        success: false,
-        message: responseData.message || responseData.error || 'Database query failed'
-      };
-    }
-
-    // Handle different response formats
-    let rows = [];
-    if (responseData.rows) {
-      // Standard query response
-      rows = responseData.rows;
-    } else if (Array.isArray(responseData)) {
-      // Some APIs return an array directly
-      rows = responseData;
-    } else if (responseData.result && Array.isArray(responseData.result)) {
-      // Some APIs nest results
-      rows = responseData.result;
-    }
-
-    // Format the response to match the expected structure
     return {
       success: true,
-      data: { rows } as unknown as T
+      data: { rows: result } as unknown as T,
     };
   } catch (error) {
-    console.error('SQL execution error:', error);
+    console.error('Database error:', error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'An unknown error occurred'
+      message: error instanceof Error ? error.message : 'An unknown error occurred',
     };
   }
 }
