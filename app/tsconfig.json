@@ -1,11 +1,11 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "types": ["jest"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    },
-    "types": ["jest"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }

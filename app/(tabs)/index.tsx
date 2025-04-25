@@ -15,12 +15,14 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
 
 interface QuickLink {
   id: string;
   title: string;
-  url: string;
+  url?: string;
   icon: keyof typeof Ionicons.glyphMap;
+  screen?: string; // Optional property for screen navigation
 }
 
 interface WeatherData {
@@ -30,6 +32,7 @@ interface WeatherData {
 }
 
 const HomeScreen = () => {
+  const navigation = useNavigation();
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -103,8 +106,8 @@ const HomeScreen = () => {
     {
       id: "3",
       title: "Campus Events",
-      url: "https://csuohio.presence.io/events",
-      icon: "calendar-outline",
+      screen: "CampusEvents",
+      icon: "today",
     },
     {
       id: "4",
@@ -114,7 +117,15 @@ const HomeScreen = () => {
     }, // replaced 'library' with valid icon
   ];
 
-  const handleLinkPress = (url: string) => setSelectedUrl(url);
+  const handleLinkPress = (link: QuickLink) => {
+    if (link.url) {
+      setSelectedUrl(link.url);
+    } else if (link.screen) {
+      navigation.navigate(link.screen as never);
+    } else {
+      console.warn("No URL provided for this link.");
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -206,7 +217,7 @@ const HomeScreen = () => {
               <Pressable
                 key={link.id}
                 style={styles.linkCard}
-                onPress={() => handleLinkPress(link.url)}
+                onPress={() => handleLinkPress(link)}
               >
                 <View style={styles.cardGradient}>
                   <Ionicons
