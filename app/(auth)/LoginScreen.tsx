@@ -197,6 +197,13 @@ const LoginScreen = ({ navigation }: LoginScreenProps) => {
             )}
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.loginButton, { backgroundColor: "#4CAF50" }]}
+            onPress={() => navigation.navigate("HomeTabs")}
+          >
+            <Text style={styles.loginButtonText}>Demo Entry</Text>
+          </TouchableOpacity>
+
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>OR</Text>
