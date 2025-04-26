@@ -12,9 +12,9 @@ import {
   FlatList,
   Platform,
 } from "react-native";
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import BlackboardIntegration from '../components/BlackboardIntegration';
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import BlackboardIntegration from "../components/BlackboardIntegration";
 
 // Import local images
 const images = {
@@ -35,7 +35,7 @@ const AcademicsExchange = () => {
   const [addItemModalVisible, setAddItemModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Form state for adding new listings
   const [newItemForm, setNewItemForm] = useState({
     title: "",
@@ -111,7 +111,8 @@ const AcademicsExchange = () => {
         provider: "Alex Johnson",
         rating: 4.8,
         price: "$25/hour",
-        description: "Experienced math tutor specializing in calculus and differential equations.",
+        description:
+          "Experienced math tutor specializing in calculus and differential equations.",
         availability: "Mon, Wed, Fri evenings",
         image: images.tutoring,
       },
@@ -121,7 +122,8 @@ const AcademicsExchange = () => {
         provider: "Samantha Lee",
         rating: 4.9,
         price: "$30/hour",
-        description: "CS major offering help with programming assignments and concepts.",
+        description:
+          "CS major offering help with programming assignments and concepts.",
         availability: "Weekends and Thursday evenings",
         image: images.tutoring,
       },
@@ -133,7 +135,8 @@ const AcademicsExchange = () => {
         provider: "Michael Chen",
         rating: 4.7,
         price: "$15/paper",
-        description: "English major offering proofreading for essays and papers.",
+        description:
+          "English major offering proofreading for essays and papers.",
         turnaround: "48 hours",
         image: images.services,
       },
@@ -170,7 +173,9 @@ const AcademicsExchange = () => {
     ],
   });
 
-  const [exchangeCategory, setExchangeCategory] = useState<'tutoring' | 'services' | 'items'>('tutoring');
+  const [exchangeCategory, setExchangeCategory] = useState<
+    "tutoring" | "services" | "items"
+  >("tutoring");
 
   const openModal = (item: any) => {
     setSelectedItem(item);
@@ -179,8 +184,13 @@ const AcademicsExchange = () => {
 
   const addNewListing = () => {
     // Create a new listing based on the form data
-    const newId = Math.max(...exchangeItems[newItemForm.category as keyof typeof exchangeItems].map(item => item.id)) + 1;
-    
+    const newId =
+      Math.max(
+        ...exchangeItems[
+          newItemForm.category as keyof typeof exchangeItems
+        ].map((item) => item.id)
+      ) + 1;
+
     const newListing = {
       id: newId,
       title: newItemForm.title,
@@ -188,26 +198,35 @@ const AcademicsExchange = () => {
       description: newItemForm.description,
       image: images[newItemForm.category as keyof typeof images],
       // Add category-specific properties
-      ...(newItemForm.category === 'tutoring' ? {
-        provider: "You", 
-        rating: 5.0,
-        availability: "Contact for availability",
-      } : {}),
-      ...(newItemForm.category === 'services' ? {
-        provider: "You",
-        rating: 5.0,
-        turnaround: "To be discussed",
-      } : {}),
-      ...(newItemForm.category === 'items' ? {
-        seller: "You",
-        condition: "Used",
-      } : {})
+      ...(newItemForm.category === "tutoring"
+        ? {
+            provider: "You",
+            rating: 5.0,
+            availability: "Contact for availability",
+          }
+        : {}),
+      ...(newItemForm.category === "services"
+        ? {
+            provider: "You",
+            rating: 5.0,
+            turnaround: "To be discussed",
+          }
+        : {}),
+      ...(newItemForm.category === "items"
+        ? {
+            seller: "You",
+            condition: "Used",
+          }
+        : {}),
     };
 
     // Add the new listing to the appropriate category
-    setExchangeItems(prev => ({
+    setExchangeItems((prev) => ({
       ...prev,
-      [newItemForm.category]: [...prev[newItemForm.category as keyof typeof prev], newListing]
+      [newItemForm.category]: [
+        ...prev[newItemForm.category as keyof typeof prev],
+        newListing,
+      ],
     }));
 
     // Reset the form and close the modal
@@ -221,61 +240,92 @@ const AcademicsExchange = () => {
   };
 
   // Filter items based on search query
-  const filteredCourses = courses.filter(course =>
-    course.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const filteredExchangeItems = {
-    tutoring: exchangeItems.tutoring.filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    tutoring: exchangeItems.tutoring.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
     ),
-    services: exchangeItems.services.filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    services: exchangeItems.services.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
     ),
-    items: exchangeItems.items.filter(item => 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    items: exchangeItems.items.filter(
+      (item) =>
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
   };
 
   const renderAcademicsContent = () => (
     <ScrollView>
       {/* Blackboard Integration */}
       <BlackboardIntegration />
-      
+
       <View style={styles.summaryContainer}>
         <Text style={styles.sectionTitle}>Degree Progress</Text>
         <View style={styles.progressContainer}>
-          <Text>Total Credits: {degreeProgress.completedCredits}/{degreeProgress.totalCredits}</Text>
+          <Text>
+            Total Credits: {degreeProgress.completedCredits}/
+            {degreeProgress.totalCredits}
+          </Text>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                {width: `${(degreeProgress.completedCredits/degreeProgress.totalCredits) * 100}%`}
-              ]} 
+                styles.progressFill,
+                {
+                  width: `${
+                    (degreeProgress.completedCredits /
+                      degreeProgress.totalCredits) *
+                    100
+                  }%`,
+                },
+              ]}
             />
           </View>
-          
-          <Text>Required Courses: {degreeProgress.completedRequiredCourses}/{degreeProgress.requiredCourses}</Text>
+
+          <Text>
+            Required Courses: {degreeProgress.completedRequiredCourses}/
+            {degreeProgress.requiredCourses}
+          </Text>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                {width: `${(degreeProgress.completedRequiredCourses/degreeProgress.requiredCourses) * 100}%`}
-              ]} 
+                styles.progressFill,
+                {
+                  width: `${
+                    (degreeProgress.completedRequiredCourses /
+                      degreeProgress.requiredCourses) *
+                    100
+                  }%`,
+                },
+              ]}
             />
           </View>
-          
-          <Text>Elective Courses: {degreeProgress.completedElectiveCourses}/{degreeProgress.electiveCourses}</Text>
+
+          <Text>
+            Elective Courses: {degreeProgress.completedElectiveCourses}/
+            {degreeProgress.electiveCourses}
+          </Text>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                {width: `${(degreeProgress.completedElectiveCourses/degreeProgress.electiveCourses) * 100}%`}
-              ]} 
+                styles.progressFill,
+                {
+                  width: `${
+                    (degreeProgress.completedElectiveCourses /
+                      degreeProgress.electiveCourses) *
+                    100
+                  }%`,
+                },
+              ]}
             />
           </View>
         </View>
@@ -289,18 +339,20 @@ const AcademicsExchange = () => {
           style={styles.card}
         >
           <LinearGradient
-            colors={['#ffffff', '#f5f5f5']}
+            colors={["#ffffff", "#f5f5f5"]}
             style={styles.cardGradient}
           >
             <View style={styles.iconContainer}>
               <Ionicons name="book" size={32} color="#4CAF50" />
             </View>
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{course.code}: {course.title}</Text>
+              <Text style={styles.cardTitle}>
+                {course.code}: {course.title}
+              </Text>
               <Text style={styles.cardDescription}>
-                Progress: {Math.round(course.progress * 100)}% | 
-                Difficulty: {course.difficulty} | 
-                Study: {course.recommendedStudyHours} hrs/week
+                Progress: {Math.round(course.progress * 100)}% | Difficulty:{" "}
+                {course.difficulty} | Study: {course.recommendedStudyHours}{" "}
+                hrs/week
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#757575" />
@@ -314,16 +366,22 @@ const AcademicsExchange = () => {
     <>
       <ScrollView>
         <View style={styles.categorySwitcher}>
-          {['tutoring', 'services', 'items'].map((category) => (
+          {["tutoring", "services", "items"].map((category) => (
             <TouchableOpacity
               key={category}
               onPress={() => setExchangeCategory(category as any)}
               style={[
                 styles.categoryButton,
-                exchangeCategory === category ? styles.activeCategoryButton : {}
+                exchangeCategory === category
+                  ? styles.activeCategoryButton
+                  : {},
               ]}
             >
-              <Text style={exchangeCategory === category ? styles.activeButtonText : {}}>
+              <Text
+                style={
+                  exchangeCategory === category ? styles.activeButtonText : {}
+                }
+              >
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -343,24 +401,32 @@ const AcademicsExchange = () => {
               style={styles.card}
             >
               <LinearGradient
-                colors={['#ffffff', '#f5f5f5']}
+                colors={["#ffffff", "#f5f5f5"]}
                 style={styles.cardGradient}
               >
                 <View style={styles.iconContainer}>
-                  <Ionicons 
+                  <Ionicons
                     name={
-                      exchangeCategory === 'tutoring' ? "school" : 
-                      exchangeCategory === 'services' ? "construct" : "cart"
-                    } 
-                    size={32} 
-                    color="#4CAF50" 
+                      exchangeCategory === "tutoring"
+                        ? "school"
+                        : exchangeCategory === "services"
+                        ? "construct"
+                        : "cart"
+                    }
+                    size={32}
+                    color="#4CAF50"
                   />
                 </View>
                 <View style={styles.cardContent}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
                   <Text style={styles.cardDescription}>
-                    {item.provider || item.seller} | {item.price}
-                    {item.rating && ` | ⭐ ${item.rating}`}
+                    {"provider" in item
+                      ? item.provider
+                      : item.seller
+                      ? item.seller
+                      : "N/A"}{" "}
+                    | {item.price}
+                    {"rating" in item && ` | ⭐ ${item.rating}`}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#757575" />
@@ -369,9 +435,9 @@ const AcademicsExchange = () => {
           ))
         )}
       </ScrollView>
-      
+
       {/* Floating Action Button for Adding New Listings */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.fabButton}
         onPress={() => setAddItemModalVisible(true)}
       >
@@ -384,7 +450,7 @@ const AcademicsExchange = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <LinearGradient
-        colors={['#1B5E20', '#4CAF50']}
+        colors={["#1B5E20", "#4CAF50"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
@@ -400,9 +466,18 @@ const AcademicsExchange = () => {
       {/* Search Bar */}
       <View style={styles.searchBarContainer}>
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#757575" style={styles.searchIcon} />
-          <TextInput 
-            placeholder={activeTab === "academics" ? "Search courses..." : "Search listings..."} 
+          <Ionicons
+            name="search"
+            size={20}
+            color="#757575"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            placeholder={
+              activeTab === "academics"
+                ? "Search courses..."
+                : "Search listings..."
+            }
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -423,7 +498,7 @@ const AcademicsExchange = () => {
             onPress={() => setActiveTab(tab as Tab)}
             style={[
               styles.tabButton,
-              activeTab === tab ? styles.activeTabButton : {}
+              activeTab === tab ? styles.activeTabButton : {},
             ]}
           >
             <Text style={{ color: activeTab === tab ? "#fff" : "#000" }}>
@@ -435,7 +510,9 @@ const AcademicsExchange = () => {
 
       {/* Content */}
       <View style={styles.content}>
-        {activeTab === "academics" ? renderAcademicsContent() : renderExchangeContent()}
+        {activeTab === "academics"
+          ? renderAcademicsContent()
+          : renderExchangeContent()}
       </View>
 
       {/* Details Modal */}
@@ -450,19 +527,30 @@ const AcademicsExchange = () => {
                   resizeMode="cover"
                 />
                 <Text style={styles.modalTitle}>
-                  {selectedItem.title || (selectedItem.code + ': ' + selectedItem.title)}
+                  {selectedItem.title ||
+                    selectedItem.code + ": " + selectedItem.title}
                 </Text>
-                
+
                 {activeTab === "academics" ? (
                   // Course details
                   <>
                     <Text style={styles.modalSubtitle}>Course Details</Text>
                     <Text>Credits: {selectedItem.credits}</Text>
                     <Text>Difficulty: {selectedItem.difficulty}</Text>
-                    <Text>Recommended Study: {selectedItem.recommendedStudyHours} hours/week</Text>
-                    <Text style={styles.modalSubtitle}>Progress: {Math.round(selectedItem.progress * 100)}%</Text>
+                    <Text>
+                      Recommended Study: {selectedItem.recommendedStudyHours}{" "}
+                      hours/week
+                    </Text>
+                    <Text style={styles.modalSubtitle}>
+                      Progress: {Math.round(selectedItem.progress * 100)}%
+                    </Text>
                     <View style={styles.progressBar}>
-                      <View style={[styles.progressFill, {width: `${selectedItem.progress * 100}%`}]} />
+                      <View
+                        style={[
+                          styles.progressFill,
+                          { width: `${selectedItem.progress * 100}%` },
+                        ]}
+                      />
                     </View>
                     <Text style={styles.modalSubtitle}>Next Deadline:</Text>
                     <Text>{selectedItem.nextDeadline}</Text>
@@ -470,9 +558,15 @@ const AcademicsExchange = () => {
                 ) : (
                   // Exchange item details
                   <>
-                    {selectedItem.provider && <Text>Provider: {selectedItem.provider}</Text>}
-                    {selectedItem.seller && <Text>Seller: {selectedItem.seller}</Text>}
-                    {selectedItem.rating && <Text>Rating: ⭐ {selectedItem.rating}</Text>}
+                    {selectedItem.provider && (
+                      <Text>Provider: {selectedItem.provider}</Text>
+                    )}
+                    {selectedItem.seller && (
+                      <Text>Seller: {selectedItem.seller}</Text>
+                    )}
+                    {selectedItem.rating && (
+                      <Text>Rating: ⭐ {selectedItem.rating}</Text>
+                    )}
                     <Text style={styles.modalPrice}>{selectedItem.price}</Text>
                     <Text style={styles.modalSubtitle}>Description:</Text>
                     <Text>{selectedItem.description}</Text>
@@ -484,7 +578,9 @@ const AcademicsExchange = () => {
                     )}
                     {selectedItem.turnaround && (
                       <>
-                        <Text style={styles.modalSubtitle}>Turnaround Time:</Text>
+                        <Text style={styles.modalSubtitle}>
+                          Turnaround Time:
+                        </Text>
                         <Text>{selectedItem.turnaround}</Text>
                       </>
                     )}
@@ -496,7 +592,7 @@ const AcademicsExchange = () => {
                     )}
                   </>
                 )}
-                
+
                 <View style={styles.buttonRow}>
                   <TouchableOpacity
                     onPress={() => setModalVisible(false)}
@@ -504,10 +600,8 @@ const AcademicsExchange = () => {
                   >
                     <Text style={styles.buttonText}>Close</Text>
                   </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={styles.primaryButton}
-                  >
+
+                  <TouchableOpacity style={styles.primaryButton}>
                     <Text style={styles.buttonText}>
                       {activeTab === "academics" ? "View Details" : "Contact"}
                     </Text>
@@ -524,19 +618,27 @@ const AcademicsExchange = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Create New Listing</Text>
-            
+
             <Text style={styles.formLabel}>Category</Text>
             <View style={styles.categorySwitcher}>
-              {['tutoring', 'services', 'items'].map((category) => (
+              {["tutoring", "services", "items"].map((category) => (
                 <TouchableOpacity
                   key={category}
-                  onPress={() => setNewItemForm({...newItemForm, category})}
+                  onPress={() => setNewItemForm({ ...newItemForm, category })}
                   style={[
                     styles.categoryButton,
-                    newItemForm.category === category ? styles.activeCategoryButton : {}
+                    newItemForm.category === category
+                      ? styles.activeCategoryButton
+                      : {},
                   ]}
                 >
-                  <Text style={newItemForm.category === category ? styles.activeButtonText : {}}>
+                  <Text
+                    style={
+                      newItemForm.category === category
+                        ? styles.activeButtonText
+                        : {}
+                    }
+                  >
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                   </Text>
                 </TouchableOpacity>
@@ -547,29 +649,35 @@ const AcademicsExchange = () => {
             <TextInput
               style={styles.formInput}
               value={newItemForm.title}
-              onChangeText={(text) => setNewItemForm({...newItemForm, title: text})}
+              onChangeText={(text) =>
+                setNewItemForm({ ...newItemForm, title: text })
+              }
               placeholder="Enter listing title"
             />
-            
+
             <Text style={styles.formLabel}>Price</Text>
             <TextInput
               style={styles.formInput}
               value={newItemForm.price}
-              onChangeText={(text) => setNewItemForm({...newItemForm, price: text})}
+              onChangeText={(text) =>
+                setNewItemForm({ ...newItemForm, price: text })
+              }
               placeholder="Enter price"
               keyboardType="numeric"
             />
-            
+
             <Text style={styles.formLabel}>Description</Text>
             <TextInput
               style={[styles.formInput, styles.textArea]}
               value={newItemForm.description}
-              onChangeText={(text) => setNewItemForm({...newItemForm, description: text})}
+              onChangeText={(text) =>
+                setNewItemForm({ ...newItemForm, description: text })
+              }
               placeholder="Enter description"
               multiline
               numberOfLines={4}
             />
-            
+
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 onPress={() => setAddItemModalVisible(false)}
@@ -577,15 +685,22 @@ const AcademicsExchange = () => {
               >
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 onPress={addNewListing}
                 style={[
                   styles.primaryButton,
-                  (!newItemForm.title || !newItemForm.price || !newItemForm.description) ? 
-                    styles.disabledButton : {}
+                  !newItemForm.title ||
+                  !newItemForm.price ||
+                  !newItemForm.description
+                    ? styles.disabledButton
+                    : {},
                 ]}
-                disabled={!newItemForm.title || !newItemForm.price || !newItemForm.description}
+                disabled={
+                  !newItemForm.title ||
+                  !newItemForm.price ||
+                  !newItemForm.description
+                }
               >
                 <Text style={styles.buttonText}>Create Listing</Text>
               </TouchableOpacity>
@@ -598,12 +713,12 @@ const AcademicsExchange = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#fff',
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingTop: Platform.OS === "ios" ? 0 : 40,
     paddingBottom: 40,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -613,13 +728,13 @@ const styles = StyleSheet.create({
   },
   headerSmall: {
     fontSize: 16,
-    color: '#E8F5E9',
-    fontWeight: '500',
+    color: "#E8F5E9",
+    fontWeight: "500",
   },
   header: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#ffffff",
     marginTop: 8,
   },
   searchBarContainer: {
@@ -631,8 +746,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 20,
     padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -642,16 +757,16 @@ const styles = StyleSheet.create({
   searchIcon: {
     marginRight: 8,
   },
-  searchInput: { 
+  searchInput: {
     flex: 1,
-    fontSize: 16 
+    fontSize: 16,
   },
   content: {
     flex: 1,
     padding: 16,
   },
-  tabContainer: { 
-    flexDirection: "row", 
+  tabContainer: {
+    flexDirection: "row",
     marginBottom: 16,
     paddingHorizontal: 16,
     marginTop: 16,
@@ -700,26 +815,26 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: 12,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   cardGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 20,
   },
   iconContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#E8F5E9",
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardContent: {
     flex: 1,
@@ -727,13 +842,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#424242',
+    fontWeight: "600",
+    color: "#424242",
     marginBottom: 4,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#757575',
+    color: "#757575",
   },
   categorySwitcher: {
     flexDirection: "row",
@@ -826,15 +941,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   fabButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
     bottom: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#4CAF50",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -843,32 +958,32 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 12,
     marginBottom: 6,
-    color: '#616161',
+    color: "#616161",
   },
   formInput: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderRadius: 8,
     padding: 10,
     fontSize: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   textArea: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   emptyResultsContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 40,
   },
   emptyResultsText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#757575',
+    color: "#757575",
   },
 });
 

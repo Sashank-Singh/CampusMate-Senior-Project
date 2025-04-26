@@ -37,7 +37,8 @@ yarn-error.log*
 .env.test
 .env.production
 .env.local
-
+app/.env.local
+**/.env*
 # IDE/Editor
 .idea
 .vscode
