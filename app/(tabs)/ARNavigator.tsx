@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Linking from 'expo-linking';
 import { 
   View, 
   Text, 
@@ -12,6 +13,7 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
+import ARNavigatorMap from './ARNavigatorMap';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
@@ -21,7 +23,7 @@ import { Camera } from 'expo-camera';
 const CSU_GREEN = '#006B54';
 const CSU_DARK_GREEN = '#004B3C'; 
 const CSU_LIGHT_GREEN = '#3A9776';
-const CSU_WHITE = '#FFFFFF';
+const CSU_WHITE = '#FFFFFF'; 
 
 // Define interfaces for building data
 interface Room {
@@ -376,8 +378,13 @@ const ARNavigator = () => {
             <View style={styles.directionsContainer}>
               <Text style={styles.directionsTitle}>Directions</Text>
               <Text style={styles.directionsText}>
-                Select a building on the campus to get directions.
+                Select a building on the map to get directions.
               </Text>
+              <ARNavigatorMap
+                buildings={buildings}
+                selectedBuilding={selectedBuilding}
+                onSelectBuilding={selectBuilding}
+              />
               {selectedBuilding && (
                 <View style={styles.directionsInfo}>
                   <Text style={styles.directionsDestination}>
@@ -394,7 +401,6 @@ const ARNavigator = () => {
                   </TouchableOpacity>
                 </View>
               )}
-              {!selectedBuilding && renderBuildingsList()}
             </View>
           )}
           

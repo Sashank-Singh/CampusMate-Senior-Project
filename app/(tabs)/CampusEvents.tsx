@@ -9,6 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MobilePreview = () => {
   const [events, setEvents] = useState<any[]>([]);
@@ -18,27 +19,51 @@ const MobilePreview = () => {
 
   const API_URL = "https://web-scraper-events.onrender.com/events";
 
-  const refreshEvents = () => {
-    console.log("🔄 Refresh clicked");
-    setIsRefreshing(true); // Start loading
-    const cacheBuster = `?_=${Date.now()}`; // bust cache
-    fetch(`${API_URL}${cacheBuster}`)
-      .then((res) => res.json())
-      .then((data) => {
+  const CACHE_KEY = "cachedEvents";
+  const CACHE_TIMESTAMP_KEY = "cachedEventsTimestamp";
+  const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  const refreshEvents = async (forceRefresh = false) => {
+    console.log("</> Refresh clicked");
+    setIsRefreshing(true);
+
+    try {
+      const cachedData = await AsyncStorage.getItem(CACHE_KEY);
+      const cachedTimestamp = await AsyncStorage.getItem(CACHE_TIMESTAMP_KEY);
+      const now = new Date().getTime();
+
+      if (
+        cachedData &&
+        cachedTimestamp &&
+        !forceRefresh &&
+        now - parseInt(cachedTimestamp) < ONE_DAY
+      ) {
+        console.log("✅ Loading events from local cache.");
+        setEvents(JSON.parse(cachedData));
+      } else {
+        console.log("🌐 Fetching events from server...");
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
         if (data.status === "success") {
           setEvents(data.events);
+          await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data.events));
+          await AsyncStorage.setItem(CACHE_TIMESTAMP_KEY, now.toString());
         } else {
-          console.error("Error in response:", data.message);
+          console.error("Error in server response:", data.message);
         }
-      })
-      .catch((err) => console.error("Error fetching events:", err))
-      .finally(() => {
-        setIsRefreshing(false); // Stop loading
-      });
+      }
+    } catch (error) {
+      console.error("Error refreshing events:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   useEffect(() => {
-    refreshEvents();
+    console.log("🛠 MobilePreview mounted");
+    setModalVisible(false); // ensure modal is closed initially
+    refreshEvents(); // load on app start
   }, []);
 
   const openModal = (event: any) => {
@@ -46,12 +71,19 @@ const MobilePreview = () => {
     setModalVisible(true);
   };
 
+  const closeModal = () => {
+    setSelectedEvent(null);
+    setModalVisible(false);
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
+      {/* ✅ Page Heading */}
       <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 16 }}>
         Events
       </Text>
 
+      {/* Search Box */}
       <View
         style={{
           backgroundColor: "#e0e0e0",
@@ -63,9 +95,9 @@ const MobilePreview = () => {
         <TextInput placeholder="Search events..." style={{ fontSize: 16 }} />
       </View>
 
-      {/* 🔥 Improved Refresh Button */}
+      {/* ✅ Refresh Button */}
       <TouchableOpacity
-        onPress={refreshEvents}
+        onPress={() => refreshEvents(true)}
         style={{
           backgroundColor: "#4CAF50",
           paddingVertical: 10,
@@ -92,6 +124,7 @@ const MobilePreview = () => {
         </Text>
       </TouchableOpacity>
 
+      {/* ✅ Events List */}
       <ScrollView>
         {events.map((event) => (
           <TouchableOpacity
@@ -113,7 +146,7 @@ const MobilePreview = () => {
               {event.title}
             </Text>
             <Text>
-              {event.date} - {event.time}
+              {event.date} {event.time ? `- ${event.time}` : ""}
             </Text>
             <Text>📍 {event.location}</Text>
             <Text>👥 {event.attendees} attending</Text>
@@ -121,8 +154,12 @@ const MobilePreview = () => {
         ))}
       </ScrollView>
 
-      {/* 🔥 Event Details Modal */}
-      <Modal visible={modalVisible} transparent animationType="slide">
+      {/* ✅ Event Modal */}
+      <Modal
+        visible={modalVisible && selectedEvent !== null}
+        transparent
+        animationType="slide"
+      >
         <View
           style={{
             flex: 1,
@@ -154,7 +191,8 @@ const MobilePreview = () => {
                   {selectedEvent.title}
                 </Text>
                 <Text style={{ fontSize: 16, marginVertical: 5 }}>
-                  📅 {selectedEvent.date} | ⏰ {selectedEvent.time}
+                  📅 {selectedEvent.date}{" "}
+                  {selectedEvent.time ? `| ⏰ ${selectedEvent.time}` : ""}
                 </Text>
                 <Text style={{ fontSize: 16 }}>
                   📍 {selectedEvent.location}
@@ -171,7 +209,7 @@ const MobilePreview = () => {
                 </Text>
                 <Text>👥 {selectedEvent.attendees}</Text>
                 <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
+                  onPress={closeModal}
                   style={{
                     marginTop: 20,
                     backgroundColor: "darkgreen",

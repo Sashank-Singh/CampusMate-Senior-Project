@@ -30,10 +30,109 @@ interface WeatherData {
   isDay: boolean;
 }
 
+import { useNavigation } from "@react-navigation/native";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+
+// Campus location schedule types
+interface CampusLocation {
+  name: string;
+  schedule: {
+    weekday: string;
+    open: string;
+    close: string;
+  }[];
+}
+
+// List of major campus locations and their hours
+const campusLocations: CampusLocation[] = [
+  {
+    name: "Library",
+    schedule: [
+      { weekday: "Mon", open: "08:00", close: "20:00" },
+      { weekday: "Tue", open: "08:00", close: "20:00" },
+      { weekday: "Wed", open: "08:00", close: "20:00" },
+      { weekday: "Thu", open: "08:00", close: "20:00" },
+      { weekday: "Fri", open: "08:00", close: "17:00" },
+      { weekday: "Sat", open: "10:00", close: "18:00" },
+      // Sunday closed
+    ],
+  },
+  {
+    name: "Rec Center",
+    schedule: [
+      { weekday: "Mon", open: "05:45", close: "22:00" },
+      { weekday: "Tue", open: "05:45", close: "22:00" },
+      { weekday: "Wed", open: "05:45", close: "22:00" },
+      { weekday: "Thu", open: "05:45", close: "22:00" },
+      { weekday: "Fri", open: "05:45", close: "21:00" },
+      { weekday: "Sat", open: "09:30", close: "16:30" },
+      { weekday: "Sun", open: "09:30", close: "16:30" },
+    ],
+  },
+  {
+    name: "Viking Marketplace",
+    schedule: [
+      { weekday: "Mon", open: "07:00", close: "20:00" },
+      { weekday: "Tue", open: "07:00", close: "20:00" },
+      { weekday: "Wed", open: "07:00", close: "20:00" },
+      { weekday: "Thu", open: "07:00", close: "20:00" },
+      { weekday: "Fri", open: "07:00", close: "20:00" },
+      { weekday: "Sat", open: "10:00", close: "18:00" },
+      { weekday: "Sun", open: "10:00", close: "18:00" },
+    ],
+  },
+  {
+    name: "Student Center",
+    schedule: [
+      { weekday: "Mon", open: "07:00", close: "22:00" },
+      { weekday: "Tue", open: "07:00", close: "22:00" },
+      { weekday: "Wed", open: "07:00", close: "22:00" },
+      { weekday: "Thu", open: "07:00", close: "22:00" },
+      { weekday: "Fri", open: "07:00", close: "22:00" },
+      { weekday: "Sat", open: "10:00", close: "18:00" },
+      { weekday: "Sun", open: "10:00", close: "18:00" },
+    ],
+  },
+];
+
+// Helper to get today's open status and hours
+function getOpenStatus(schedule: CampusLocation["schedule"]): {
+  open: boolean;
+  hours: string | null;
+} {
+  const now = new Date();
+  const dayIdx = now.getDay(); // 0=Sun, 1=Mon, ...
+  const weekdayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = weekdayMap[dayIdx];
+  const todayEntry = schedule.find((s) => s.weekday === today);
+  if (!todayEntry) return { open: false, hours: null };
+  // Parse open/close
+  const [openH, openM] = todayEntry.open.split(":").map(Number);
+  const [closeH, closeM] = todayEntry.close.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const open = nowMinutes >= openMinutes && nowMinutes < closeMinutes;
+  // Format hours for display
+  const format = (h: number, m: number) => {
+    const ampm = h >= 12 ? "PM" : "AM";
+    let hour = h % 12;
+    if (hour === 0) hour = 12;
+    return `${hour}:${m.toString().padStart(2, "0")} ${ampm}`;
+  };
+  const hours = `${format(openH, openM)} - ${format(closeH, closeM)}`;
+  return { open, hours };
+}
+
 const HomeScreen = () => {
+  const [isCelsius, setIsCelsius] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+
+  // Type-safe navigation for TS
+  const navigation = useNavigation<any>();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -109,19 +208,25 @@ const HomeScreen = () => {
     },
     {
       id: "4",
-      title: "Campus Events",
-      screen: "CampusEvents",
-      icon: "today",
-    },
-    {
-      id: "5",
       title: "Library",
       url: "https://www.csuohio.edu/library",
       icon: "book-outline",
     },
+    {
+      id: "5",
+      title: "Campus Events",
+      screen: "CampusEvents",
+      icon: "today-outline",
+    },
   ];
 
-  const handleLinkPress = (url: string) => setSelectedUrl(url);
+  const handleLinkPress = (urlOrScreen: string, isScreen: boolean) => {
+    if (isScreen) {
+      navigation.navigate(urlOrScreen);
+    } else {
+      setSelectedUrl(urlOrScreen);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -134,20 +239,141 @@ const HomeScreen = () => {
 
         {/* Sliding Menu */}
         {isMenuOpen && (
-          <View style={styles.menuContainer}>
-            <Text style={styles.menuTitle}>Menu</Text>
-            <TouchableOpacity style={styles.menuOption}>
-              <Text style={styles.menuOptionText}>Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuOption}>
-              <Text style={styles.menuOptionText}>Settings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuOption}>
-              <Text style={styles.menuOptionText}>About</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuOption}>
-              <Text style={styles.menuOptionText}>Logout</Text>
-            </TouchableOpacity>
+          <View style={styles.menuOverlay}>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity
+                style={styles.menuCloseButton}
+                onPress={toggleMenu}
+              >
+                <Ionicons name="close" size={28} color="#006B54" />
+              </TouchableOpacity>
+              <Text style={styles.menuTitle}>Menu</Text>
+              {/* Profile */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("Profile");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>Profile</Text>
+                </View>
+              </TouchableOpacity>
+              {/* Settings */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("Settings");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="settings-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>Settings</Text>
+                </View>
+              </TouchableOpacity>
+              {/* About */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("About");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>About</Text>
+                </View>
+              </TouchableOpacity>
+              {/* Explore */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("Explore");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="compass-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>Explore</Text>
+                </View>
+              </TouchableOpacity>
+              {/* Courses */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("Courses");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="book-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>Courses</Text>
+                </View>
+              </TouchableOpacity>
+              {/* AR Navigation */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu();
+                  navigation.navigate("ARNavigator");
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="navigate-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>AR Navigation</Text>
+                </View>
+              </TouchableOpacity>
+              {/* Logout */}
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={() => {
+                  toggleMenu(); /* Insert logout logic here */
+                }}
+              >
+                <View style={styles.menuOptionRow}>
+                  <Ionicons
+                    name="log-out-outline"
+                    size={26}
+                    color="#006B54"
+                    style={styles.menuOptionIcon}
+                  />
+                  <Text style={styles.menuOptionLabel}>Logout</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -157,25 +383,133 @@ const HomeScreen = () => {
         >
           <LinearGradient
             colors={["#1B5E20", "#4CAF50"]}
-            start={{ x: 0, y: 0 }}
+            start={{ x: 0.1, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.heroSection}
+            style={[
+              styles.heroSection,
+              { paddingTop: 24, paddingBottom: 24 },
+              {
+                borderRadius: 20,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 10,
+              },
+            ]}
           >
-            <View style={styles.heroContent}>
-              <Text style={styles.welcomeSmall}>Welcome to</Text>
-              <Text style={styles.appName}>CampusMate</Text>
-              <Text style={styles.universityName}>
+            <View
+              style={[
+                styles.heroContent,
+                {
+                  paddingTop: 0,
+                  paddingBottom: 0,
+                  marginTop: 0,
+                  marginBottom: 0,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.heroWelcome,
+                  {
+                    fontSize: 16,
+                    color: "#FFFFFF",
+                    opacity: 0.7,
+                  },
+                ]}
+              >
+                Welcome to
+              </Text>
+              <View
+                style={[
+                  styles.heroTitleRow,
+                  {
+                    justifyContent: "center",
+                    alignItems: "center",
+                    paddingVertical: 10,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.heroAppName,
+                    {
+                      fontSize: 36,
+                      fontWeight: "bold",
+                      color: "#FFFFFF",
+                    },
+                  ]}
+                >
+                  CampusMate
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.heroAccentUnderline,
+                  {
+                    backgroundColor: "#34C759",
+                    height: 4,
+                    borderRadius: 2,
+                    marginVertical: 10,
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.heroUniversity,
+                  {
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    color: "#FFFFFF",
+                  },
+                ]}
+              >
                 Cleveland State University
               </Text>
             </View>
           </LinearGradient>
 
           <View style={styles.statusCard}>
-            <Text style={styles.statusTitle}>Campus Updates</Text>
-            <View style={styles.statusItem}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Library Hours: 7AM - 11PM</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.statusDropdownHeader}
+              onPress={() => setStatusDropdownOpen((open) => !open)}
+              activeOpacity={0.8}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={styles.statusTitle}>Campus Status</Text>
+                <Ionicons
+                  name={
+                    statusDropdownOpen
+                      ? "chevron-up-outline"
+                      : "chevron-down-outline"
+                  }
+                  size={22}
+                  color="#006B54"
+                  style={{ marginLeft: 6, marginTop: -4 }}
+                />
+              </View>
+            </TouchableOpacity>
+            {statusDropdownOpen && (
+              <View style={styles.statusDropdownContent}>
+                {campusLocations.map((loc) => {
+                  const { open, hours } = getOpenStatus(loc.schedule);
+                  return (
+                    <View style={styles.statusItem} key={loc.name}>
+                      <View
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: open ? "#2ecc40" : "#e74c3c" },
+                        ]}
+                      />
+                      <Text style={styles.statusText}>
+                        {loc.name}: {hours ? hours : "Closed Today"}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
 
           <View style={styles.widgetRow}>
@@ -185,9 +519,37 @@ const HomeScreen = () => {
                 size={32}
                 color="#FFA000"
               />
-              <Text style={styles.temperature}>
-                {weather ? `${weather.temp}°F` : "Loading..."}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={styles.temperature}>
+                  {weather
+                    ? `${
+                        isCelsius
+                          ? Math.round(((weather.temp - 32) * 5) / 9)
+                          : weather.temp
+                      }°${isCelsius ? "C" : "F"}`
+                    : "Loading..."}
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    marginLeft: 8,
+                    paddingVertical: 2,
+                    paddingHorizontal: 8,
+                    borderRadius: 8,
+                    backgroundColor: !isCelsius ? "#4CAF50" : "#EEE",
+                  }}
+                  onPress={() => setIsCelsius((c) => !c)}
+                >
+                  <Text
+                    style={{
+                      color: !isCelsius ? "#FFF" : "#333",
+                      fontWeight: "bold",
+                      fontSize: 12,
+                    }}
+                  >
+                    {isCelsius ? "°F" : "°C"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <Text style={styles.weatherDesc}>
                 {weather ? weather.description : "Loading..."}
               </Text>
@@ -213,7 +575,12 @@ const HomeScreen = () => {
               <Pressable
                 key={link.id}
                 style={styles.linkCard}
-                onPress={() => handleLinkPress(link.url ?? "")}
+                onPress={() =>
+                  handleLinkPress(
+                    (link.screen || link.url) ?? "",
+                    !!link.screen
+                  )
+                }
               >
                 <View style={styles.cardGradient}>
                   <Ionicons
@@ -324,6 +691,50 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  statusDropdownHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statusDropdownContent: {
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  menuOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.35)",
+    zIndex: 100,
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+  },
+  menuCloseButton: {
+    position: "absolute",
+    top: 18,
+    right: 18,
+    zIndex: 10,
+    backgroundColor: "#E8F5E9",
+    borderRadius: 16,
+    padding: 4,
+  },
   menuContainer: {
     position: "absolute",
     top: 0, // Adjust this to move the menu vertically
@@ -346,27 +757,84 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   menuOption: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    paddingVertical: 18,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: "#fff",
+    borderWidth: 0,
+    borderColor: "transparent",
   },
-  menuOptionText: {
-    fontSize: 25,
+  menuOptionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  menuOptionIcon: {
+    marginLeft: 2,
+    marginRight: 16,
+  },
+  menuOptionLabel: {
+    fontSize: 23,
+    color: "#222",
     fontWeight: "bold",
-    color: "#424242",
+    letterSpacing: 0.2,
   },
   heroSection: {
-    paddingTop: 100,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
-    marginBottom: 10,
+    paddingTop: 90,
+    paddingBottom: 36,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    marginBottom: 16,
     overflow: "hidden",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 7,
+    alignItems: "center",
+  },
+  // Removed duplicate definition of heroContent
+  heroWelcome: {
+    fontSize: 18,
+    color: "#eafaf1",
+    fontWeight: "400",
+    marginBottom: 10,
+    letterSpacing: 1.2,
+    opacity: 0.9,
+  },
+  heroTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroAppName: {
+    fontSize: 38,
+    fontWeight: "bold",
+    color: "#fff",
+    letterSpacing: 1.5,
+    textShadowColor: "rgba(0,0,0,0.10)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 5,
+    marginBottom: 0,
+  },
+  heroAccentUnderline: {
+    width: 120,
+    height: 6,
+    backgroundColor: "#eafaf1",
+    borderRadius: 4,
+    marginTop: 6,
+    marginBottom: 18,
+    alignSelf: "center",
+    opacity: 0.7,
+  },
+  heroUniversity: {
+    fontSize: 22,
+    color: "#eafaf1",
+    fontWeight: "600",
+    letterSpacing: 1,
+    marginTop: 2,
+    textAlign: "center",
+    opacity: 0.95,
   },
   heroContent: {
     paddingHorizontal: 20,

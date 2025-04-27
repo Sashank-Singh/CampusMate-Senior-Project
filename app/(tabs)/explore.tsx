@@ -9,9 +9,12 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import ExploreDetailsModal from "../screens/ExploreDetailsModal";
 
 const ExploreScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const exploreItems = [
     {
@@ -21,7 +24,7 @@ const ExploreScreen = () => {
     },
     {
       id: "2",
-      title: "Cafeteria",
+      title: "Viking Marketplace (Cafeteria)",
       icon: "restaurant-outline",
     },
     {
@@ -33,6 +36,16 @@ const ExploreScreen = () => {
       id: "4",
       title: "Student Center",
       icon: "home-outline",
+    },
+    {
+      id: "5",
+      title: "Wolstein Center",
+      icon: "basketball-outline",
+    },
+    {
+      id: "6",
+      title: "Health and Wellness Center",
+      icon: "medkit-outline",
     },
   ];
 
@@ -59,12 +72,28 @@ const ExploreScreen = () => {
 
       {/* Items List */}
       <ScrollView contentContainerStyle={styles.gridContainer}>
-        {exploreItems.map((item) => (
-          <Pressable key={item.id} style={styles.card}>
-            <Ionicons name={item.icon} size={32} color="#4CAF50" />
-            <Text style={styles.cardTitle}>{item.title}</Text>
-          </Pressable>
-        ))}
+        {exploreItems
+          .filter((item) =>
+            item.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+          .map((item) => (
+            <Pressable
+              key={item.id}
+              style={styles.card}
+              onPress={() => {
+                setSelectedItem(item);
+                setModalVisible(true);
+              }}
+            >
+              <Ionicons name={item.icon} size={32} color="#4CAF50" />
+              <Text style={styles.cardTitle}>{item.title}</Text>
+            </Pressable>
+          ))}
+        <ExploreDetailsModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          item={selectedItem}
+        />
       </ScrollView>
     </View>
   );
