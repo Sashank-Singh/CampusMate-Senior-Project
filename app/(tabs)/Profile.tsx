@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert } from 'react-native';
+import { View, Text,TextInput, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -29,6 +29,9 @@ const ProfileScreen = (props: ProfileScreenProps) => {
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [editingGraduationYear, setEditingGraduationYear] = useState(false);
+  const [newGraduationYear, setNewGraduationYear] = useState('2026');
+
 
   // Function to extract CSU ID from email
 
@@ -63,7 +66,8 @@ const ProfileScreen = (props: ProfileScreenProps) => {
     name: user?.name || props.name || 'John Doe',
     csuId: user?.email ? extractCsuIdFromEmail(user.email) : (props.csuId || '0000000'),
     status: props.status || 'Active',
-    profileImage: props.profileImage || 'https://via.placeholder.com/150'
+    profileImage: props.profileImage || 'https://via.placeholder.com/150',
+    graduationYear:'2026',
   });
 
   // Update user data when user changes
@@ -116,7 +120,10 @@ const ProfileScreen = (props: ProfileScreenProps) => {
   };
 
   return (
-    <View style={styles.container}>
+<ScrollView contentContainerStyle={styles.container}>
+
+
+
       {/* Help & Support Modal */}
       <Modal
         animationType="slide"
@@ -320,79 +327,189 @@ const ProfileScreen = (props: ProfileScreenProps) => {
 
       <View style={styles.separator} />
 
-      <View style={styles.menuContainer}>
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => {
-            console.log('Settings button pressed');
-            // Show the settings modal
-            setShowSettings(true);
-          }}
-        >
-          <Ionicons name="settings-outline" size={24} color="#006633" />
-          <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
+  
 
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => {
-            console.log('Help & Support button pressed');
-            setShowHelpSupport(true);
-          }}
-        >
-          <Ionicons name="help-circle-outline" size={24} color="#006633" />
-          <Text style={styles.menuText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
+     <View style={{
+  width: '90%',
+  backgroundColor: '#fff',
+  padding: 15,
+  marginBottom: 20,
+  borderRadius: 25,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.15,
+  shadowRadius: 8,
+  elevation: 5,
+}}>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="information-circle-outline" size={24} color="#006633" />
-          <Text style={styles.menuText}>About</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
+  <Text style={{ fontSize: 15, fontWeight: 'bold', marginBottom: 5 }}>🎓 Graduation Info</Text>
 
-        <TouchableOpacity
-          style={[styles.menuItem, styles.logoutItem]}
-          onPress={() => {
-            Alert.alert(
-              "Logout",
-              "Are you sure you want to logout?",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Logout",
-                  style: "destructive",
-                  onPress: async () => {
-                    await logout();
-                    // Navigation will be handled by the AuthProvider
-                  }
-                }
-              ]
-            );
-          }}
-        >
-          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
-          <Text style={[styles.menuText, styles.logoutText]}>Logout</Text>
-          <Ionicons name="chevron-forward" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
+
+  {editingGraduationYear ? (
+    <>
+     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+  <TextInput
+    value={newGraduationYear}
+    onChangeText={setNewGraduationYear}
+    keyboardType="numeric"
+    style={{
+      borderBottomWidth: 1,
+      borderColor: '#555',
+      fontSize: 16,
+      paddingVertical: 2,
+      width: 100,
+      marginRight: 30,
+    }}
+  />
+  <TouchableOpacity
+    onPress={() => {
+      setUserData(prev => ({
+        ...prev,
+        graduationYear: newGraduationYear
+      }));
+      setEditingGraduationYear(false);
+      Alert.alert('Success', 'Graduation Year updated!');
+    }}
+    style={{ marginRight: 10 }}
+  >
+    <Text style={{ color: '#006633', fontWeight: 'bold' }}>Save</Text>
+  </TouchableOpacity>
+
+  {/* NEW: Cancel button */}
+  <TouchableOpacity onPress={() => setEditingGraduationYear(false)}>
+    <Text style={{ color: 'red', fontWeight: 'bold' }}>Cancel</Text>
+  </TouchableOpacity>
+</View>
+
+
+    </>
+  ) : (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Text style={{ fontSize: 16, color: '#555', marginRight: 10 }}>
+        Graduation Year: {userData.graduationYear}
+      </Text>
+      <TouchableOpacity onPress={() => setEditingGraduationYear(true)}>
+        <Ionicons name="pencil" size={18} color="#006633" />
+      </TouchableOpacity>
     </View>
+  )}
+</View>
+
+<View style={styles.separator} />
+
+
+      <View style={styles.menuContainer}>
+        <View style={styles.menuContainer}>
+  
+  {/* 🌟 New white card wrapping Settings + Help + About */}
+  <View
+    style={{
+      backgroundColor: '#FFFFFF',
+      marginHorizontal: 20,
+      marginBottom: 20,
+      paddingVertical: 10,
+      borderRadius: 25,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 5,
+    }}
+  >
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => {
+        console.log('Settings button pressed');
+        setShowSettings(true);
+      }}
+    >
+      <Ionicons name="settings-outline" size={22} color="#006633" />
+      <Text style={styles.menuText}>Settings</Text>
+      <Ionicons name="chevron-forward" size={24} color="#666" />
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => {
+        console.log('Help & Support button pressed');
+        setShowHelpSupport(true);
+      }}
+    >
+      <Ionicons name="help-circle-outline" size={24} color="#006633" />
+      <Text style={styles.menuText}>Help & Support</Text>
+      <Ionicons name="chevron-forward" size={24} color="#666" />
+    </TouchableOpacity>
+
+    <TouchableOpacity style={styles.menuItem}>
+      <Ionicons name="information-circle-outline" size={24} color="#006633" />
+      <Text style={styles.menuText}>About</Text>
+      <Ionicons name="chevron-forward" size={24} color="#666" />
+    </TouchableOpacity>
+  </View>
+
+  {/* 🚨 Logout stays OUTSIDE the white card */}
+
+</View>
+
+
+        <View
+  style={{
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 40,
+    paddingVertical: 10,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  }}
+>
+  <TouchableOpacity
+    style={styles.menuItem}
+    onPress={() => {
+      Alert.alert(
+        "Logout",
+        "Are you sure you want to logout?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Logout",
+            style: "destructive",
+            onPress: async () => {
+              await logout();
+            }
+          }
+        ]
+      );
+    }}
+  >
+    <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+    <Text style={[styles.menuText, { color: '#FF3B30' }]}>Logout</Text>
+    <Ionicons name="chevron-forward" size={24} color="#666" />
+  </TouchableOpacity>
+</View>
+</View>
+    </ScrollView>
+
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
+    minHeight: '100%',
     justifyContent: 'flex-start',
     backgroundColor: '#f5f5f5',
     paddingTop: 70,
+    paddingBottom: 50,
   },
   cardContainer: {
     width: screenWidth * 0.9,
     aspectRatio: 1.6,
-    borderRadius: 15,
+    borderRadius: 25,
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
@@ -431,12 +548,20 @@ const styles = StyleSheet.create({
   },
   detailsContainer: {
     marginTop: 'auto',
+    marginBottom:50,
   },
   detailText: {
     fontSize: 16,
     color: '#FFFFFF',
     marginBottom: 8,
+    
   },
+  nameText: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  color: '#FFFFFF',
+  letterSpacing: 0.5,
+},
   imageContainer: {
     position: 'absolute',
     top: 20,
@@ -480,21 +605,36 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: '100%',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
+    backgroundColor: '#f5f5f',
+    borderRadius:15,
+    paddingVertical:10,
+    marginTop:0,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
+  backgroundColor: '#fff',
+  borderRadius: 5,
+  paddingVertical: 15,
+  paddingHorizontal: 20,
+  marginVertical: 6,
+  marginHorizontal:10,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 3,
+  elevation: 2,
+},
+
   menuText: {
     fontSize: 16,
-    color: '#333',
+    color: '#1C1C1E',
     marginLeft: 15,
+    fontWeight: '600',
     flex: 1,
+    letterSpacing: 0.2,
+
   },
   // Modal styles
   modalContainer: {
