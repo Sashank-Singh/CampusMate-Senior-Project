@@ -1,3 +1,4 @@
+//add graduation om 
 import React, { useState, useEffect } from 'react';
 import { View, Text,TextInput, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
