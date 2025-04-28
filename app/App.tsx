@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { View, ActivityIndicator, Alert } from 'react-native';
+import { View, ActivityIndicator, Alert } from "react-native";
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./Intropage";
 import ExploreScreen from "./(tabs)/explore";
@@ -11,11 +11,13 @@ import CoursesScreen from "./(tabs)/Courses";
 import EventsScreen from "./(tabs)/Exchange";
 import ProfileScreen from "./(tabs)/Profile";
 import HomeScreen from "./(tabs)/index";
-import LoginScreen from './(auth)/LoginScreen';
-import SignUpScreen from './(auth)/SignUpScreen';
+import LoginScreen from "./(auth)/LoginScreen";
+import SignUpScreen from "./(auth)/SignUpScreen";
 import ARNavigator from "./(tabs)/ARNavigator";
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import BlackboardAuth from './(auth)/BlackboardAuth';
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import BlackboardAuth from "./(auth)/BlackboardAuth";
+import CampusEventsScreen from "./(tabs)/CampusEvents";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -26,7 +28,6 @@ const HomeTabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName = "home-outline";
-
           if (route.name === "Home") {
             iconName = focused ? "home" : "home-outline";
           } else if (route.name === "Explore") {
@@ -39,7 +40,6 @@ const HomeTabs = () => {
             iconName = focused ? "person" : "person-outline";
           }
 
-          // @ts-ignore - Ionicons has these icons but TypeScript doesn't know about them
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
@@ -54,27 +54,45 @@ const HomeTabs = () => {
   );
 };
 
-// Main navigation component
 const AppNavigator = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const [splashLoading, setSplashLoading] = useState(true);
+  const [isFirstLaunch, setIsFirstLaunch] = useState<null | boolean>(null);
 
-  // Show splash screen initially
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+        if (hasLaunched === null) {
+          await AsyncStorage.setItem("hasLaunched", "true");
+          setIsFirstLaunch(true);
+        } else {
+          setIsFirstLaunch(false);
+        }
+      } catch (err) {
+        console.log("Error checking first launch:", err);
+        setIsFirstLaunch(false);
+      }
+    };
+    checkFirstLaunch();
+  }, []);
+
   if (splashLoading) {
     return <SplashScreen onFinish={() => setSplashLoading(false)} />;
   }
 
-  // Show loading indicator while checking authentication
-  if (isLoading) {
+  if (isLoading || isFirstLaunch === null) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#2F614A" />
       </View>
     );
   }
 
   return (
-    <Stack.Navigator initialRouteName={isAuthenticated ? "HomeTabs" : "Intropage"}>
+    <Stack.Navigator
+      initialRouteName={isAuthenticated ? "HomeTabs" : "Intropage"}
+    >
       {!isAuthenticated ? (
         // Auth screens
         <>
@@ -100,9 +118,18 @@ const AppNavigator = () => {
         component={HomeTabs}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="BlackboardAuth" 
-        component={BlackboardAuth} 
+      <Stack.Screen
+        name="CampusEvents"
+        component={CampusEventsScreen}
+        options={{
+          title: "Campus Events",
+          headerTitleAlign: "center",
+        }}
+      />
+
+      <Stack.Screen
+        name="BlackboardAuth"
+        component={BlackboardAuth}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

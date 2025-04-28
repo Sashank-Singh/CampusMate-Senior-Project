@@ -45,18 +45,34 @@ export default function BlackboardIntegration() {
   const checkAuthenticationStatus = async () => {
     setIsLoading(true);
     try {
-      BlackboardService.setAuthenticated(true);
-      const authenticated = BlackboardService.isAuthenticated();
-      console.log("Authentication status:", authenticated);
-      
+      console.log("Checking Blackboard authentication status...");
+
+      // First check if we're already authenticated
+      let authenticated = BlackboardService.isAuthenticated();
+      console.log("Initial authentication status:", authenticated);
+
+      // If not authenticated, try to get a token
+      if (!authenticated) {
+        console.log("Not authenticated, attempting to get client credentials token...");
+        const success = await BlackboardService.getClientCredentialsToken();
+        console.log("Token acquisition result:", success);
+
+        // Check authentication status again
+        authenticated = BlackboardService.isAuthenticated();
+        console.log("Authentication status after token attempt:", authenticated);
+      }
+
       setIsConnected(authenticated);
-      
+
       if (authenticated) {
+        console.log("Authenticated, loading Blackboard data...");
         await loadBlackboardData();
+      } else {
+        console.log("Not authenticated after token attempt");
       }
     } catch (err) {
       setError('Failed to check authentication status');
-      console.error(err);
+      console.error("Authentication check error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -64,28 +80,48 @@ export default function BlackboardIntegration() {
 
   const loadBlackboardData = async () => {
     try {
+      console.log("Loading Blackboard data...");
+
       // Load courses
+      console.log("Fetching courses...");
       const coursesData = await BlackboardService.getCourses();
-      
+      console.log("Courses data received:", coursesData ? "Yes" : "No");
+
+      if (!coursesData || !coursesData.results) {
+        console.error("No courses data received");
+        setError('Failed to load courses data');
+        return;
+      }
+
+      console.log(`Found ${coursesData.results.length} courses`);
+
       // Process course data
       const processedCourses: BlackboardCourse[] = [];
-      
+
       for (const course of coursesData.results) {
         try {
+          console.log(`Processing course: ${course.name} (${course.id})`);
+
           // Get grades for each course
+          console.log(`Fetching grades for course ${course.id}...`);
           const gradesData = await BlackboardService.getCourseGrades(course.id);
-          
+
           // Calculate progress based on completed assignments
+          console.log(`Fetching grade columns for course ${course.id}...`);
           const columnsData = await BlackboardService.getGradeColumns(course.id);
-          
+
           // Simple progress calculation based on available grades
-          const totalItems = columnsData.results.length;
-          const gradedItems = gradesData.results.filter(g => g.score !== null).length;
+          const totalItems = columnsData.results ? columnsData.results.length : 0;
+          const gradedItems = gradesData.results ?
+            gradesData.results.filter(g => g.score !== null).length : 0;
           const progress = totalItems > 0 ? gradedItems / totalItems : 0;
-          
+
+          console.log(`Course progress: ${progress * 100}% (${gradedItems}/${totalItems})`);
+
           // Calculate overall grade if available
-          const overallGrade = gradesData.results.find(g => g.columnId === 'overall');
-          
+          const overallGrade = gradesData.results ?
+            gradesData.results.find(g => g.columnId === 'overall') : null;
+
           processedCourses.push({
             id: course.id,
             courseId: course.courseId,
@@ -94,39 +130,54 @@ export default function BlackboardIntegration() {
             grade: overallGrade ? `${overallGrade.score}%` : null,
             creditHours: 3, // Default
           });
+
+          console.log(`Added course to processed list: ${course.name}`);
         } catch (courseError) {
           console.error(`Error processing course ${course.id}:`, courseError);
         }
       }
-      
+
+      console.log(`Processed ${processedCourses.length} courses`);
       setCourses(processedCourses);
-      
+
       // Load calendar/upcoming assignments
+      console.log("Fetching calendar items...");
       const now = new Date();
       const twoWeeksFromNow = new Date();
       twoWeeksFromNow.setDate(now.getDate() + 14);
-      
+
       const calendarData = await BlackboardService.getCalendarItems({
         since: now.toISOString(),
         until: twoWeeksFromNow.toISOString(),
         limit: 10
       });
-      
+
+      console.log("Calendar data received:", calendarData ? "Yes" : "No");
+
+      if (!calendarData || !calendarData.results) {
+        console.log("No calendar data available");
+        return; // Continue without calendar data
+      }
+
       // Process calendar items
-      const processedAssignments = calendarData.results
-        .filter(item => item.type === 'GradableItem')
-        .map(item => ({
-          id: item.id,
-          title: item.title,
-          dueDate: item.end,
-          status: new Date(item.end) < now ? 'late' : 'upcoming',
-        }));
-      
-      setUpcomingAssignments(processedAssignments);
-      
+      console.log(`Found ${calendarData.results.length} calendar items`);
+      const gradableItems = calendarData.results.filter(item => item.type === 'GradableItem');
+      console.log(`Found ${gradableItems.length} gradable items`);
+
+      const processedAssignments = gradableItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        dueDate: item.end,
+        status: (new Date(item.end) < now ? 'late' : 'upcoming') as 'late' | 'upcoming',
+      }));
+
+      console.log(`Processed ${processedAssignments.length} assignments`);
+      setUpcomingAssignments(processedAssignments as BlackboardAssignment[]);
+
+      console.log("Blackboard data loading complete");
     } catch (err) {
       setError('Failed to load Blackboard data');
-      console.error(err);
+      console.error("Error loading Blackboard data:", err);
     }
   };
 
@@ -181,14 +232,14 @@ export default function BlackboardIntegration() {
           </TouchableOpacity>
         </View>
       )}
-      
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Blackboard Integration</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={loadBlackboardData}>
           <Ionicons name="refresh" size={20} color="#4CAF50" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Courses from Blackboard</Text>
         {courses.length === 0 ? (
@@ -204,8 +255,8 @@ export default function BlackboardIntegration() {
               </View>
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                  <View 
-                    style={[styles.progressFill, {width: `${course.progress * 100}%`}]} 
+                  <View
+                    style={[styles.progressFill, {width: `${course.progress * 100}%`}]}
                   />
                 </View>
                 <Text style={styles.progressText}>
@@ -216,7 +267,7 @@ export default function BlackboardIntegration() {
           ))
         )}
       </View>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Upcoming Assignments</Text>
         {upcomingAssignments.length === 0 ? (
@@ -226,9 +277,9 @@ export default function BlackboardIntegration() {
             <View key={assignment.id} style={styles.assignmentItem}>
               <View style={styles.assignmentHeader}>
                 <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-                <Text 
+                <Text
                   style={[
-                    styles.assignmentStatus, 
+                    styles.assignmentStatus,
                     { color: assignment.status === 'late' ? '#f44336' : '#4CAF50' }
                   ]}
                 >
@@ -247,7 +298,7 @@ export default function BlackboardIntegration() {
           ))
         )}
       </View>
-      
+
       <TouchableOpacity style={styles.disconnectButton} onPress={disconnectFromBlackboard}>
         <Text style={styles.disconnectButtonText}>Disconnect from Blackboard</Text>
       </TouchableOpacity>

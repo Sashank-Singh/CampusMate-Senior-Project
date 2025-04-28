@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React from "react";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { WebView } from "react-native-webview";
 
 interface WebViewScreenProps {
   route: {
@@ -19,8 +19,8 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
         source={{ uri: url }}
         startInLoadingState={true} // Show loading indicator while loading
         renderLoading={() => <ActivityIndicator size="large" color="#0000ff" />}
-        onError={() => alert('Failed to load the page.')}
-        onHttpError={() => alert('HTTP error occurred.')}
+        onError={() => alert("Failed to load the page.")}
+        onHttpError={() => alert("HTTP error occurred.")}
       />
     </View>
   );
