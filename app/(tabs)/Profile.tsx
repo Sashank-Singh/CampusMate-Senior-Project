@@ -1,4 +1,5 @@
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { WebView } from 'react-native-webview';
 
@@ -80,6 +81,7 @@ const [showWebView, setShowWebView] = useState(false);
 
   // Update user data when user changes
   useEffect(() => {
+    
     if (user) {
       const csuId = user.email ? extractCsuIdFromEmail(user.email) : props.csuId || '0000000';
 
@@ -90,6 +92,23 @@ const [showWebView, setShowWebView] = useState(false);
       }));
     }
   }, [user]);
+  useEffect(() => {
+  const loadGraduationYear = async () => {
+    try {
+      const savedYear = await AsyncStorage.getItem('graduationYear');
+      if (savedYear) {
+        setUserData(prev => ({
+          ...prev,
+          graduationYear: savedYear,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load graduation year:', error);
+    }
+  };
+
+  loadGraduationYear();
+}, []);
 
   console.log('Props:', props);
   console.log('UserData:', userData);
@@ -468,18 +487,24 @@ const [showWebView, setShowWebView] = useState(false);
     }}
   />
   <TouchableOpacity
-    onPress={() => {
+  onPress={async () => {
+    try {
+      await AsyncStorage.setItem('graduationYear', newGraduationYear);
       setUserData(prev => ({
         ...prev,
         graduationYear: newGraduationYear
       }));
       setEditingGraduationYear(false);
       Alert.alert('Success', 'Graduation Year updated!');
-    }}
-    style={{ marginRight: 10 }}
-  >
-    <Text style={{ color: '#006633', fontWeight: 'bold' }}>Save</Text>
-  </TouchableOpacity>
+    } catch (error) {
+      console.error('Failed to save graduation year:', error);
+    }
+  }}
+  style={{ marginRight: 10 }}
+>
+  <Text style={{ color: '#006633', fontWeight: 'bold' }}>Save</Text>
+</TouchableOpacity>
+
 
   {/* NEW: Cancel button */}
   <TouchableOpacity onPress={() => setEditingGraduationYear(false)}>
