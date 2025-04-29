@@ -1,12 +1,16 @@
-//add graduation om 
+
+
+import { WebView } from 'react-native-webview';
+
+import { View, Text, TextInput, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert, Linking } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { View, Text,TextInput, Image, StyleSheet, Dimensions, TouchableOpacity, ActivityIndicator, Modal, ScrollView, Switch, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -32,6 +36,9 @@ const ProfileScreen = (props: ProfileScreenProps) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingGraduationYear, setEditingGraduationYear] = useState(false);
   const [newGraduationYear, setNewGraduationYear] = useState('2026');
+  const [showAbout, setShowAbout] = useState(false);
+
+const [showWebView, setShowWebView] = useState(false);
 
 
   // Function to extract CSU ID from email
@@ -147,21 +154,44 @@ const ProfileScreen = (props: ProfileScreenProps) => {
                 <Text style={styles.sectionTitle}>CALL TREE OPTIONS:</Text>
                 <View style={styles.helpItem}>
                   <Text style={styles.helpProblem}>Password Reset</Text>
-                  <Text style={styles.helpAction}>Call x5050 select option "1"</Text>
+                  <Text style={styles.helpAction}>contact IS&T at 216-687-5050 and select option "#3"</Text>
                 </View>
                 <View style={styles.helpItem}>
                   <Text style={styles.helpProblem}>Faculty Blackboard Issues</Text>
-                  <Text style={styles.helpAction}>Call x5050 select option "2"</Text>
+                  <Text style={styles.helpAction}>(216) 687-5050 — then select option "#2"</Text>
                 </View>
                 <View style={styles.helpItem}>
                   <Text style={styles.helpProblem}>Technical Issues or STUDENT Blackboard Issues</Text>
-                  <Text style={styles.helpAction}>Call x5050 select option "3"</Text>
+                  <Text style={styles.helpAction}>(216) 687-5050 — then select option "#3"</Text>
                 </View>
                 <View style={styles.helpItem}>
                   <Text style={styles.helpProblem}>To reach a department or person by name</Text>
-                  <Text style={styles.helpAction}>Call X5050 select option "0"</Text>
+                  <Text style={styles.helpAction}>(216) 687-5050 — then select option "#0"</Text>
                 </View>
               </View>
+<View style={[styles.helpItem, { alignItems: 'center' }]}>
+  <TouchableOpacity
+  onPress={() => {
+    Linking.openURL('https://www.csuohio.edu/ist-help-desk/help-desk');
+  }}
+  style={{
+    backgroundColor: '#006633',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginTop: 10,
+  }}
+>
+  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+    Visit CSU Help Desk
+  </Text>
+</TouchableOpacity>
+
+</View>
+
+
+
+
 
               <View style={styles.settingsSection}>
                 <Text style={styles.sectionTitle}>EMERGENCIES</Text>
@@ -177,27 +207,21 @@ const ProfileScreen = (props: ProfileScreenProps) => {
               </View>
 
               <View style={styles.settingsSection}>
-                <Text style={styles.sectionTitle}>VIKING SAFETY ESCORTS</Text>
-                <Text style={styles.helpText}>
-                  Faculty, staff and students who feel unsure about their safety while walking on campus may request a Viking Safety Escort. The Viking Safety Escort Service is not a taxi service but a safety option for those that have a genuine concern for their personal safety.
-                </Text>
-                <Text style={[styles.helpText, {marginTop: 10}]}>
-                  Viking Safety Escorts are provided 24 hours a day, 7 days a week, and 365 days a year by Security Officers and Student Campus Safety Officers (CSOs) for on-campus and nearby off-campus student housing locations only.
-                </Text>
-                <Text style={[styles.helpText, {marginTop: 10}]}>
-                  You may request a Viking Safety Escort through our Rave Guardian safety app or by contacting CSUPD at 216-687-2020.
-                </Text>
-                <Text style={[styles.helpText, {marginTop: 10, fontWeight: 'bold'}]}>
-                  Don't walk alone – use the Viking Safety Escort Service.
-                </Text>
-                <Text style={[styles.helpText, {marginTop: 15, fontWeight: 'bold', textAlign: 'center', color: '#006633', fontSize: 16}]}>
-                  See Something Suspicious, Say Something!
+  <Text style={styles.sectionTitle}>CSU Campus Safety</Text>
 
+  <Text style={styles.helpText}>
+    Cleveland State University prioritizes student safety both on and off campus. 
+  </Text>
 
+  <Text style={[styles.helpText, { marginTop: 10 }]}>
+    Viking Safety Escorts are available 24/7 to assist students walking to and from locations on campus and nearby housing.
+  </Text>
 
+  <Text style={[styles.helpText, { marginTop: 10 }]}>
+    Call CSU Police at 216-687-2020 for assistance.
+  </Text>
+</View>
 
-                </Text>
-              </View>
             </ScrollView>
           </View>
         </View>
@@ -273,6 +297,87 @@ const ProfileScreen = (props: ProfileScreenProps) => {
         </View>
       </Modal>
 
+      <Modal
+  animationType="slide"
+  transparent={true}
+  visible={showAbout}
+  onRequestClose={() => setShowAbout(false)}
+>
+  <View style={styles.modalContainer}>
+    <View style={styles.modalContent}>
+      <View style={styles.modalHeader}>
+        <TouchableOpacity onPress={() => setShowAbout(false)}>
+          <Ionicons name="arrow-back" size={24} color="#006633" />
+        </TouchableOpacity>
+        <Text style={styles.modalTitle}>About</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
+      <ScrollView style={styles.modalScrollView}>
+  <View style={styles.settingsSection}>
+    <Text style={styles.sectionTitle}>About CampusMate</Text>
+
+    <Text style={styles.helpText}>
+      CampusMate is your personal guide to Cleveland State University. Our app 
+      helps students navigate campus life, stay updated with safety information, 
+      explore events, and access essential services — all in one place.
+    </Text>
+
+    {/* Nice Divider */}
+    <View style={{ 
+      height: 1, 
+      backgroundColor: '#ccc', 
+      marginVertical: 20 
+    }} />
+
+    {/* Copyright Info */}
+    <Text style={[styles.helpText, { fontWeight: 'bold', textAlign: 'center' }]}>
+      © 2024 CampusMate
+    </Text>
+    <Text style={[styles.helpText, { textAlign: 'center', marginTop: 4 }]}>
+      Made with ❤️ by  Sashank Singh ,Hitesh Kukreja, Maneesh Pashupulety, Nitish Yenaganti.
+    </Text>
+
+    {/* Version Info */}
+    <Text style={[styles.helpText, { textAlign: 'center', marginTop: 10, fontSize: 12, color: '#666' }]}>
+      Version 1.0.0
+    </Text>
+  </View>
+</ScrollView>
+
+    </View>
+  </View>
+</Modal>
+{showWebView && (
+  <Modal
+    visible={showWebView}
+    animationType="slide"
+    onRequestClose={() => setShowWebView(false)}
+  >
+    <View style={{ flex: 1 }}>
+      <TouchableOpacity
+        onPress={() => setShowWebView(false)}
+        style={{
+          padding: 15,
+          backgroundColor: '#006633',
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
+      </TouchableOpacity>
+
+     <WebView
+  source={{ uri: 'https://www.csuohio.edu/ist-help-desk/help-desk' }}
+  startInLoadingState={true}
+  renderLoading={() => (
+    <ActivityIndicator size="large" color="#006633" style={{ marginTop: 20 }} />
+  )}
+  style={{ flex: 1 }}
+/>
+
+    </View>
+  </Modal>
+)}
       <View style={styles.cardContainer}>
         <LinearGradient colors={['#006633', '#008040']} style={styles.gradient}>
           <View style={styles.swooshContainer}>
@@ -441,11 +546,15 @@ const ProfileScreen = (props: ProfileScreenProps) => {
       <Ionicons name="chevron-forward" size={24} color="#666" />
     </TouchableOpacity>
 
-    <TouchableOpacity style={styles.menuItem}>
-      <Ionicons name="information-circle-outline" size={24} color="#006633" />
-      <Text style={styles.menuText}>About</Text>
-      <Ionicons name="chevron-forward" size={24} color="#666" />
-    </TouchableOpacity>
+    <TouchableOpacity
+  style={styles.menuItem}
+  onPress={() => setShowAbout(true)}  // 👉 ADD THIS
+>
+  <Ionicons name="information-circle-outline" size={24} color="#006633" />
+  <Text style={styles.menuText}>About</Text>
+  <Ionicons name="chevron-forward" size={24} color="#666" />
+</TouchableOpacity>
+
   </View>
 
   {/* 🚨 Logout stays OUTSIDE the white card */}
@@ -735,3 +844,4 @@ const styles = StyleSheet.create({
 });
 
 export default ProfileScreen;
+
