@@ -52,3 +52,5 @@ app/.env.local
 .netlify
 *.log
 .turbo
+/android
+app/ios

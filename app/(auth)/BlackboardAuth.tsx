@@ -10,17 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { WebView } from "react-native-webview";
-import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import axios from "axios";
-
-const BLACKBOARD_AUTH_URL =
-  "https://bb-csuohio.blackboard.com/learn/api/public/v1/oauth2/authorizationcode";
-const BLACKBOARD_TOKEN_URL =
-  "https://bb-csuohio.blackboard.com/learn/api/public/v1/oauth2/token";
-const CLIENT_ID = "72bc131c-0998-4cda-8e67-52d0e86d9557"; // Replace with actual Client ID
-const REDIRECT_URI = "campusmate://auth/callback";
+import BlackboardService from "../services/BlackboardService";
 
 export default function BlackboardAuth() {
   const navigation = useNavigation();
@@ -30,21 +22,71 @@ export default function BlackboardAuth() {
   const [courses, setCourses] = useState<any[]>([]);
   const [showWebView, setShowWebView] = useState(true);
 
+  // Function to go back to the main app
+  const goBack = () => {
+    console.log("Navigating back to main app");
+    // @ts-ignore
+    navigation.goBack();
+  };
+
+  // Function to handle successful authentication
+  const handleSuccess = () => {
+    console.log("Authentication successful, returning to main app");
+    Alert.alert("Success", "Blackboard connected successfully!", [
+      { text: "OK", onPress: goBack },
+    ]);
+  };
+
+  // First useEffect - Load authorization URL and set timeout
   useEffect(() => {
-    const url = `${BLACKBOARD_AUTH_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      REDIRECT_URI
-    )}`;
+    // Get authorization URL from BlackboardService
+    const url = BlackboardService.getAuthorizationUrl();
+    console.log("Auth URL:", url);
     setAuthUrl(url);
     setLoading(false);
-  }, []);
+
+    // Set a timeout to automatically return to the app if authentication takes too long
+    const timeoutId = setTimeout(() => {
+      if (showWebView) {
+        console.log("Authentication timeout reached, showing alert");
+        Alert.alert(
+          "Authentication Timeout",
+          "The authentication process is taking longer than expected. Would you like to continue waiting or return to the app?",
+          [
+            { text: "Continue Waiting", style: "default" },
+            { text: "Return to App", style: "cancel", onPress: goBack },
+          ]
+        );
+      }
+    }, 60000); // 60 seconds timeout
+
+    return () => clearTimeout(timeoutId);
+  }, [showWebView]);
+
+  // Second useEffect - Handle successful authentication
+  useEffect(() => {
+    // If we have courses and we're not showing the WebView, we've successfully authenticated
+    if (courses.length > 0 && !showWebView) {
+      // Add a slight delay before showing the success alert
+      const timer = setTimeout(() => {
+        handleSuccess();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [courses, showWebView]);
 
   const handleNavigationStateChange = async (navState: any) => {
-    if (navState.url.startsWith(REDIRECT_URI)) {
+    // Check if the URL is the callback URL
+    if (navState.url.startsWith("campusmate://auth/callback")) {
+      console.log("Callback URL detected:", navState.url);
       const url = new URL(navState.url);
       const code = url.searchParams.get("code");
       if (code) {
+        console.log("Authorization code received:", code);
         await exchangeCodeForToken(code);
       } else {
+        console.error("No authorization code found in callback URL");
         setError("Authorization code not found");
       }
     }
@@ -52,54 +94,43 @@ export default function BlackboardAuth() {
 
   const exchangeCodeForToken = async (code: string) => {
     try {
-      const response = await axios.post(
-        BLACKBOARD_TOKEN_URL,
-        new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code,
-          redirect_uri: REDIRECT_URI,
-          client_id: CLIENT_ID,
-        }),
-        {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
+      console.log("Exchanging code for token...");
+      // Use BlackboardService to exchange code for token
+      const success = await BlackboardService.getTokenFromCode(code);
 
-      const { access_token } = response.data;
-      if (access_token) {
-        await SecureStore.setItemAsync("blackboard_token", access_token);
-        await fetchCourses(access_token);
+      if (success) {
+        console.log("Token exchange successful");
+        await fetchCourses();
         setShowWebView(false);
       } else {
-        setError("Access token not received");
+        console.error("Token exchange failed");
+        setError("Failed to get access token");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error exchanging code for token:", err);
       setError("Failed to exchange code for token");
     }
   };
 
-  const fetchCourses = async (accessToken: string) => {
+  const fetchCourses = async () => {
     try {
-      const response = await axios.get(
-        "https://bb-csuohio.blackboard.com/learn/api/public/v1/courses",
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
+      console.log("Fetching courses...");
+      // Use BlackboardService to fetch courses
+      const coursesResponse = await BlackboardService.getCourses();
 
-      const coursesFetched = response.data.results;
-      console.log("Fetched Courses:", coursesFetched);
+      if (coursesResponse && coursesResponse.results) {
+        const coursesFetched = coursesResponse.results;
+        console.log("Fetched Courses:", coursesFetched);
 
-      setCourses(coursesFetched);
-      Alert.alert("Success", "Courses Fetched!");
+        setCourses(coursesFetched);
+        Alert.alert("Success", "Courses Fetched!");
+      } else {
+        console.error("No courses found in response");
+        Alert.alert("No courses found");
+      }
     } catch (err) {
-      console.error("Error fetching courses", err);
-      Alert.alert("Failed to fetch courses.");
+      console.error("Error fetching courses:", err);
+      Alert.alert("Failed to fetch courses");
     }
   };
 
@@ -114,48 +145,109 @@ export default function BlackboardAuth() {
   if (error) {
     return (
       <SafeAreaView style={styles.container}>
+        {/* Header with back button */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={goBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Blackboard Login</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={48} color="#f44336" />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => setError(null)}
-          >
-            <Text style={styles.buttonText}>Retry</Text>
-          </TouchableOpacity>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => setError(null)}
+            >
+              <Text style={styles.buttonText}>Retry</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={goBack}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
+  useEffect(() => {
+    // If we have courses and we're not showing the WebView, we've successfully authenticated
+    if (courses.length > 0 && !showWebView) {
+      // Add a slight delay before showing the success alert
+      const timer = setTimeout(() => {
+        handleSuccess();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [courses, showWebView]);
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with back button */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#4CAF50" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Blackboard Login</Text>
+        <View style={{ width: 24 }} />
+      </View>
+
       {showWebView ? (
-        <WebView
-          source={{ uri: authUrl }}
-          onNavigationStateChange={handleNavigationStateChange}
-          startInLoadingState
-          renderLoading={() => (
-            <ActivityIndicator
-              size="large"
-              color="#4CAF50"
-              style={{ marginTop: 20 }}
-            />
-          )}
-        />
+        <>
+          <Text style={styles.instructions}>
+            Please log in to your Blackboard account. You will be automatically
+            returned to the app after successful login.
+          </Text>
+          <WebView
+            source={{ uri: authUrl }}
+            onNavigationStateChange={handleNavigationStateChange}
+            startInLoadingState
+            renderLoading={() => (
+              <ActivityIndicator
+                size="large"
+                color="#4CAF50"
+                style={{ marginTop: 20 }}
+              />
+            )}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("WebView error:", nativeEvent);
+              setError(`WebView error: ${nativeEvent.description}`);
+            }}
+            onHttpError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.error("WebView HTTP error:", nativeEvent);
+              if (nativeEvent.statusCode >= 400) {
+                setError(
+                  `HTTP error ${nativeEvent.statusCode}: ${nativeEvent.description}`
+                );
+              }
+            }}
+          />
+        </>
       ) : (
-        <ScrollView style={{ padding: 16 }}>
-          {courses.map((course: any) => (
-            <View key={course.id} style={styles.courseCard}>
-              <Text style={styles.courseTitle}>
-                {course.name || course.courseId}
-              </Text>
-              <Text style={styles.courseSubtitle}>
-                {course.externalId || "No External ID"}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
+        <>
+          <Text style={styles.successText}>Authentication successful!</Text>
+          <ScrollView style={{ padding: 16 }}>
+            {courses.map((course: any) => (
+              <View key={course.id} style={styles.courseCard}>
+                <Text style={styles.courseTitle}>
+                  {course.name || course.courseId}
+                </Text>
+                <Text style={styles.courseSubtitle}>
+                  {course.externalId || "No External ID"}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+          <TouchableOpacity style={styles.returnButton} onPress={goBack}>
+            <Text style={styles.buttonText}>Return to App</Text>
+          </TouchableOpacity>
+        </>
       )}
     </SafeAreaView>
   );
@@ -165,6 +257,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  backButton: {
+    padding: 8,
+  },
+  instructions: {
+    padding: 16,
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    margin: 12,
+  },
+  successText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    textAlign: "center",
+    marginVertical: 16,
   },
   errorContainer: {
     flex: 1,
@@ -178,12 +303,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 16,
+    width: "100%",
+  },
   retryButton: {
     backgroundColor: "#4CAF50",
     borderRadius: 8,
     padding: 16,
     alignItems: "center",
-    minWidth: 200,
+    minWidth: 140,
+    marginHorizontal: 8,
+  },
+  cancelButton: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+    minWidth: 140,
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cancelButtonText: {
+    color: "#f44336",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  returnButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: 8,
+    padding: 16,
+    alignItems: "center",
+    margin: 16,
   },
   buttonText: {
     color: "white",
