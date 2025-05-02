@@ -8,23 +8,22 @@ import {
   ScrollView,
   Modal,
   ActivityIndicator,
-  SafeAreaView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Feather from "@expo/vector-icons/Feather"; // Feather icons (search, refresh)
 
 const MobilePreview = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
   const API_URL = "https://web-scraper-events.onrender.com/events";
+
   const CACHE_KEY = "cachedEvents";
   const CACHE_TIMESTAMP_KEY = "cachedEventsTimestamp";
   const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+  // Fetch from server manually
   const refreshEvents = async (forceRefresh = false) => {
     console.log("</> Refresh clicked");
     setIsRefreshing(true);
@@ -40,7 +39,7 @@ const MobilePreview = () => {
         !forceRefresh &&
         now - parseInt(cachedTimestamp) < ONE_DAY
       ) {
-        console.log("✅ Loading events from local cache.");
+        console.log(" Loading events from local cache.");
         setEvents(JSON.parse(cachedData));
       } else {
         console.log("🌐 Fetching events from server...");
@@ -62,10 +61,25 @@ const MobilePreview = () => {
     }
   };
 
+  // Load cached events silently when app loads (no server call)
+  const loadCachedEvents = async () => {
+    console.log("🛠 Loading cached events on startup...");
+    try {
+      const cachedData = await AsyncStorage.getItem(CACHE_KEY);
+      if (cachedData) {
+        setEvents(JSON.parse(cachedData));
+        console.log("✅ Loaded events from local cache.");
+      } else {
+        console.log("❌ No cached events found.");
+      }
+    } catch (error) {
+      console.error("Error loading cached events:", error);
+    }
+  };
+
   useEffect(() => {
-    console.log("🛠 MobilePreview mounted");
-    setModalVisible(false);
-    refreshEvents(); // Load events on start
+    setModalVisible(false); // ensure modal is closed initially
+    loadCachedEvents(); // load cache only, no server fetch
   }, []);
 
   const openModal = (event: any) => {
@@ -78,139 +92,91 @@ const MobilePreview = () => {
     setModalVisible(false);
   };
 
-  // Filter events based on search
-  const filteredEvents = events.filter((event) =>
-    event.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f3f4f6" }}>
-      {/* ✅ Header */}
-      <View
+    <View style={{ flex: 1, backgroundColor: "#f5f5f5", padding: 16 }}>
+      {/* ✅ Page Heading */}
+      <Text
         style={{
-          backgroundColor: "#059669",
-          paddingTop: 48,
-          paddingBottom: 24,
-          paddingHorizontal: 16,
-          borderBottomLeftRadius: 24,
-          borderBottomRightRadius: 24,
-          alignItems: "center",
+          fontSize: 24,
+          fontWeight: "bold",
+          marginBottom: 16,
+          justifyContent: "center",
+          textAlign: "center",
         }}
       >
-        <Text
-          style={{
-            fontSize: 28,
-            fontWeight: "bold",
-            color: "#ffffff",
-            textAlign: "center",
-          }}
-        >
-          Events
-        </Text>
+        Events
+      </Text>
+
+      {/* Search Box */}
+      <View
+        style={{
+          backgroundColor: "#e0e0e0",
+          borderRadius: 20,
+          padding: 10,
+          marginBottom: 16,
+        }}
+      >
+        <TextInput placeholder="Search events..." style={{ fontSize: 16 }} />
       </View>
 
-      {/* ✅ Content */}
-      <View style={{ flex: 1, paddingHorizontal: 16, paddingVertical: 16 }}>
-        {/* ✅ Search Box */}
-        <View
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: 16,
-            padding: 12,
-            marginBottom: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 3,
-          }}
-        >
-          <Feather name="search" size={20} color="#666" />
-          <TextInput
-            placeholder="Search events..."
-            placeholderTextColor="#666"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-            style={{
-              marginLeft: 8,
-              flex: 1,
-              fontSize: 16,
-              color: "#000",
-            }}
+      {/* ✅ Refresh Button */}
+      <TouchableOpacity
+        onPress={() => refreshEvents(true)}
+        style={{
+          backgroundColor: "#4CAF50",
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          borderRadius: 30,
+          alignSelf: "flex-end",
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+        disabled={isRefreshing}
+      >
+        {isRefreshing ? (
+          <ActivityIndicator
+            size="small"
+            color="#fff"
+            style={{ marginRight: 8 }}
           />
-        </View>
+        ) : (
+          <Text style={{ fontSize: 18, marginRight: 8 }}>🔄</Text>
+        )}
+        <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </Text>
+      </TouchableOpacity>
 
-        {/* ✅ Refresh Button */}
-        <TouchableOpacity
-          onPress={() => refreshEvents(true)}
-          style={{
-            backgroundColor: "#4CAF50",
-            paddingVertical: 10,
-            paddingHorizontal: 20,
-            borderRadius: 30,
-            alignSelf: "flex-end",
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? (
-            <ActivityIndicator
-              size="small"
-              color="#ffffff"
-              style={{ marginRight: 8 }}
+      {/* ✅ Events List */}
+      <ScrollView>
+        {events.map((event) => (
+          <TouchableOpacity
+            key={event.id}
+            onPress={() => openModal(event)}
+            style={{
+              backgroundColor: "white",
+              borderRadius: 10,
+              padding: 16,
+              marginBottom: 16,
+            }}
+          >
+            <Image
+              source={{ uri: event.image }}
+              style={{ width: "100%", height: 150, borderRadius: 10 }}
+              resizeMode="cover"
             />
-          ) : (
-            <Feather
-              name="refresh-cw"
-              size={22}
-              color="#ffffff"
-              style={{ marginRight: 8 }}
-            />
-          )}
-          <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-            {isRefreshing ? "Refreshing..." : "Refresh"}
-          </Text>
-        </TouchableOpacity>
-
-        {/* ✅ Events List */}
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {filteredEvents.map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              onPress={() => openModal(event)}
-              style={{
-                backgroundColor: "white",
-                borderRadius: 10,
-                padding: 16,
-                marginBottom: 16,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 2,
-                elevation: 3,
-              }}
-            >
-              <Image
-                source={{ uri: event.image }}
-                style={{ width: "100%", height: 150, borderRadius: 10 }}
-                resizeMode="cover"
-              />
-              <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
-                {event.title}
-              </Text>
-              <Text>
-                {event.date} {event.time ? `- ${event.time}` : ""}
-              </Text>
-              <Text>📍 {event.location}</Text>
-              <Text>👥 {event.attendees} attending</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+            <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 10 }}>
+              {event.title}
+            </Text>
+            <Text>
+              {event.date} {event.time ? `- ${event.time}` : ""}
+            </Text>
+            <Text>📍 {event.location}</Text>
+            <Text>👥 {event.attendees} attending</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* ✅ Event Modal */}
       <Modal
@@ -285,7 +251,7 @@ const MobilePreview = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
