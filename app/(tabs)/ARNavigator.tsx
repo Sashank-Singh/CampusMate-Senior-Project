@@ -11,13 +11,15 @@ import {
   Alert,
   Platform,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Animated,
+  LayoutAnimation
 } from 'react-native';
 import ARNavigatorMap from './ARNavigatorMap';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-import { Camera } from 'expo-camera';
+import { Camera, CameraType } from 'expo-camera';
 
 // CSU colors
 const CSU_GREEN = '#006B54';
@@ -50,6 +52,36 @@ interface Building {
   address?: string;
 }
 
+// Add after the Building interface
+interface NavigationPoint {
+  id: string;
+  name: string;
+  type: 'building' | 'landmark' | 'parking' | 'entrance';
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+interface TourStop {
+  id: string;
+  name: string;
+  description: string;
+  duration: number; // in minutes
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  nextStop?: string; // ID of next stop
+}
+
+interface RouteStep {
+  distance: string;
+  duration: string;
+  instructions: string;
+  maneuver?: string;
+}
+
 // Cleveland State University campus buildings data
 const CSU_CAMPUS_BUILDINGS: Building[] = [
   {
@@ -61,12 +93,12 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     address: '2121 Euclid Ave, Cleveland, OH 44115',
     yearBuilt: '2010',
     rooms: [
-      { id: 'rm101', name: 'Viking Outfitters Bookstore', floor: 1, occupancy: 22, maxOccupancy: 50 },
-      { id: 'rm102', name: 'Food Court', floor: 1, occupancy: 78, maxOccupancy: 200 },
-      { id: 'rm103', name: 'Student Lounge', floor: 1, occupancy: 15, maxOccupancy: 30 },
-      { id: 'rm201', name: 'Meeting Room A', floor: 2, occupancy: 4, maxOccupancy: 20 },
-      { id: 'rm202', name: 'Ballroom', floor: 2, occupancy: 30, maxOccupancy: 300 },
-      { id: 'rm301', name: 'Student Organizations', floor: 3, occupancy: 12, maxOccupancy: 30 },
+      { id: 'sc_rm101', name: 'Viking Outfitters Bookstore', floor: 1, occupancy: 22, maxOccupancy: 50 },
+      { id: 'sc_rm102', name: 'Food Court', floor: 1, occupancy: 78, maxOccupancy: 200 },
+      { id: 'sc_rm103', name: 'Student Lounge', floor: 1, occupancy: 15, maxOccupancy: 30 },
+      { id: 'sc_rm201', name: 'Meeting Room A', floor: 2, occupancy: 4, maxOccupancy: 20 },
+      { id: 'sc_rm202', name: 'Ballroom', floor: 2, occupancy: 30, maxOccupancy: 300 },
+      { id: 'sc_rm301', name: 'Student Organizations', floor: 3, occupancy: 12, maxOccupancy: 30 },
     ]
   },
   {
@@ -78,11 +110,11 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     address: '2121 Euclid Ave, Cleveland, OH 44115',
     yearBuilt: '1978',
     rooms: [
-      { id: 'rm101', name: 'Research Commons', floor: 1, occupancy: 30, maxOccupancy: 100 },
-      { id: 'rm102', name: 'Computer Lab', floor: 1, occupancy: 15, maxOccupancy: 50 },
-      { id: 'rm201', name: 'Group Study Rooms', floor: 2, occupancy: 22, maxOccupancy: 60 },
-      { id: 'rm301', name: 'Quiet Study Floor', floor: 3, occupancy: 45, maxOccupancy: 120 },
-      { id: 'rm401', name: 'Special Collections', floor: 4, occupancy: 5, maxOccupancy: 20 },
+      { id: 'lib_rm101', name: 'Research Commons', floor: 1, occupancy: 30, maxOccupancy: 100 },
+      { id: 'lib_rm102', name: 'Computer Lab', floor: 1, occupancy: 15, maxOccupancy: 50 },
+      { id: 'lib_rm201', name: 'Group Study Rooms', floor: 2, occupancy: 22, maxOccupancy: 60 },
+      { id: 'lib_rm301', name: 'Quiet Study Floor', floor: 3, occupancy: 45, maxOccupancy: 120 },
+      { id: 'lib_rm401', name: 'Special Collections', floor: 4, occupancy: 5, maxOccupancy: 20 },
     ]
   },
   {
@@ -94,10 +126,10 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     address: '2351 Euclid Ave, Cleveland, OH 44115',
     yearBuilt: '1997',
     rooms: [
-      { id: 'rm101', name: 'Chemistry Lab', floor: 1, occupancy: 18, maxOccupancy: 24 },
-      { id: 'rm102', name: 'Physics Lab', floor: 1, occupancy: 12, maxOccupancy: 24 },
-      { id: 'rm201', name: 'Computer Lab', floor: 2, occupancy: 15, maxOccupancy: 30 },
-      { id: 'rm301', name: 'Research Lab', floor: 3, occupancy: 8, maxOccupancy: 15 },
+      { id: 'src_rm101', name: 'Chemistry Lab', floor: 1, occupancy: 18, maxOccupancy: 24 },
+      { id: 'src_rm102', name: 'Physics Lab', floor: 1, occupancy: 12, maxOccupancy: 24 },
+      { id: 'src_rm201', name: 'Computer Lab', floor: 2, occupancy: 15, maxOccupancy: 30 },
+      { id: 'src_rm301', name: 'Research Lab', floor: 3, occupancy: 8, maxOccupancy: 15 },
     ]
   },
   {
@@ -107,11 +139,11 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     floors: 3,
     description: 'Monte Ahuja College of Business with modern classrooms and collaborative spaces.',
     address: '1860 E 18th St, Cleveland, OH 44114',
-    yearBuilt: '2010', 
+    yearBuilt: '2010',
     rooms: [
-      { id: 'rm101', name: 'Lecture Hall 102', floor: 1, occupancy: 40, maxOccupancy: 120 },
-      { id: 'rm102', name: 'Student Success Center', floor: 1, occupancy: 12, maxOccupancy: 20 },
-      { id: 'rm201', name: 'Finance Lab', floor: 2, occupancy: 10, maxOccupancy: 30 },
+      { id: 'bus_rm101', name: 'Lecture Hall 102', floor: 1, occupancy: 40, maxOccupancy: 120 },
+      { id: 'bus_rm102', name: 'Student Success Center', floor: 1, occupancy: 12, maxOccupancy: 20 },
+      { id: 'bus_rm201', name: 'Finance Lab', floor: 2, occupancy: 10, maxOccupancy: 30 },
     ]
   },
   {
@@ -123,9 +155,9 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     address: '1860 E 22nd St, Cleveland, OH 44115',
     yearBuilt: '1971',
     rooms: [
-      { id: 'rm101', name: 'Lecture Hall RT 101', floor: 1, occupancy: 25, maxOccupancy: 80 },
-      { id: 'rm501', name: 'Computer Lab', floor: 5, occupancy: 15, maxOccupancy: 30 },
-      { id: 'rm1001', name: 'Faculty Offices', floor: 10, occupancy: 12, maxOccupancy: 20 },
+      { id: 'rt_rm101', name: 'Lecture Hall RT 101', floor: 1, occupancy: 25, maxOccupancy: 80 },
+      { id: 'rt_rm501', name: 'Computer Lab', floor: 5, occupancy: 15, maxOccupancy: 30 },
+      { id: 'rt_rm1001', name: 'Faculty Offices', floor: 10, occupancy: 12, maxOccupancy: 20 },
     ]
   },
   {
@@ -137,11 +169,45 @@ const CSU_CAMPUS_BUILDINGS: Building[] = [
     address: '2420 Chester Ave, Cleveland, OH 44115',
     yearBuilt: '2006',
     rooms: [
-      { id: 'rm101', name: 'Main Gym', floor: 1, occupancy: 56, maxOccupancy: 200 },
-      { id: 'rm102', name: 'Swimming Pool', floor: 1, occupancy: 15, maxOccupancy: 50 },
-      { id: 'rm103', name: 'Weight Room', floor: 1, occupancy: 25, maxOccupancy: 60 },
-      { id: 'rm201', name: 'Indoor Track', floor: 2, occupancy: 12, maxOccupancy: 30 },
+      { id: 'rec_rm101', name: 'Main Gym', floor: 1, occupancy: 56, maxOccupancy: 200 },
+      { id: 'rec_rm102', name: 'Swimming Pool', floor: 1, occupancy: 15, maxOccupancy: 50 },
+      { id: 'rec_rm103', name: 'Weight Room', floor: 1, occupancy: 25, maxOccupancy: 60 },
+      { id: 'rec_rm201', name: 'Indoor Track', floor: 2, occupancy: 12, maxOccupancy: 30 },
     ]
+  }
+];
+
+const CSU_TOUR_STOPS: TourStop[] = [
+  {
+    id: 'stop1',
+    name: 'Welcome Center',
+    description: 'Start your tour at the CSU Welcome Center and learn about our university history and mission.',
+    duration: 15,
+    location: { latitude: 41.5018062, longitude: -81.6746577 },
+    nextStop: 'stop2'
+  },
+  {
+    id: 'stop2',
+    name: 'Student Center',
+    description: 'Explore the heart of campus life, featuring dining options, study spaces, and student organizations.',
+    duration: 20,
+    location: { latitude: 41.5018062, longitude: -81.6746577 },
+    nextStop: 'stop3'
+  },
+  {
+    id: 'stop3',
+    name: 'Michael Schwartz Library',
+    description: 'Visit our main library, home to extensive research resources and quiet study spaces.',
+    duration: 15,
+    location: { latitude: 41.5022, longitude: -81.6750 },
+    nextStop: 'stop4'
+  },
+  {
+    id: 'stop4',
+    name: 'Recreation Center',
+    description: 'Check out our state-of-the-art fitness facility with gyms, pools, and wellness programs.',
+    duration: 20,
+    location: { latitude: 41.5011, longitude: -81.6737 }
   }
 ];
 
@@ -150,36 +216,117 @@ const windowHeight = Dimensions.get('window').height;
 
 const ARNavigator = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [cameraType, setCameraType] = useState(Camera.Constants?.Type?.back || 'back');
+  const [cameraType, setCameraType] = useState<CameraType>('back');
   const [isARActive, setIsARActive] = useState(false);
   const [buildings, setBuildings] = useState<Building[]>(CSU_CAMPUS_BUILDINGS);
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [userLocation, setUserLocation] = useState<Location.LocationObjectCoords | null>(null);
   const [mode, setMode] = useState<'buildings' | 'studyspaces' | 'directions' | 'tour'>('buildings');
+  const [activeFeatures, setActiveFeatures] = useState({
+    buildings: true,
+    studyspaces: false,
+    directions: false,
+    tour: false
+  });
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('satellite');
   const [zoomLevel, setZoomLevel] = useState(16);
+  const [fadeAnim] = useState(new Animated.Value(1));
+  const [layoutReady, setLayoutReady] = useState(false);
+  const [buttonsLayout, setButtonsLayout] = useState({
+    ready: false,
+    animated: new Animated.Value(0)
+  });
+  const [currentTourStop, setCurrentTourStop] = useState<string | null>(null);
+  const [navigationTarget, setNavigationTarget] = useState<NavigationPoint | null>(null);
+  const [routeSteps, setRouteSteps] = useState<RouteStep[]>([]);
+  const [routeDistance, setRouteDistance] = useState<string>('');
+  const [routeDuration, setRouteDuration] = useState<string>('');
+  const [directions, setDirections] = useState<Array<{latitude: number; longitude: number}> | null>(null);
+  const [encodedRoute, setEncodedRoute] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Add a small delay to ensure layout is ready
+    const timer = setTimeout(() => {
+      setLayoutReady(true);
+      setButtonsLayout(prev => ({ ...prev, ready: true }));
+      Animated.spring(buttonsLayout.animated, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7
+      }).start();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Generate Google Maps Static API URL
   const getStaticMapUrl = () => {
-    const width = Math.floor(windowWidth);
-    const height = Math.floor(windowHeight);
+    // For a more accurate screen fit, account for device pixel ratio
+    const pixelRatio = Platform.OS === 'ios' ? Math.min(2, Math.round(Dimensions.get('window').scale)) : 1;
+    const width = Math.floor(windowWidth * pixelRatio);
+    const height = Math.floor(windowHeight * pixelRatio);
     const size = `${width}x${height}`;
-    const zoom = selectedBuilding ? 18 : 16;
+    
+    // Adjust zoom level based on current context
+    const zoom =
+      navigationTarget || currentTourStop
+        ? 18
+        : selectedBuilding
+        ? 18
+        : 16;
+        
     const key = 'AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM';
-    
-    // Center coordinates - either selected building or campus center
-    const center = selectedBuilding 
-      ? `${selectedBuilding.location.latitude},${selectedBuilding.location.longitude}` 
+
+    // Determine the center of the map
+    const currentStopObj = CSU_TOUR_STOPS.find(
+      (stop) => stop.id === currentTourStop
+    );
+    const center = navigationTarget
+      ? `${navigationTarget.location.latitude},${navigationTarget.location.longitude}`
+      : currentStopObj
+      ? `${currentStopObj.location.latitude},${currentStopObj.location.longitude}`
+      : selectedBuilding
+      ? `${selectedBuilding.location.latitude},${selectedBuilding.location.longitude}`
       : '41.5018062,-81.6746577'; // CSU campus center
-    
-    // Create marker parameters for all buildings
-    const markers = buildings.map(building => {
-      const color = selectedBuilding?.id === building.id ? 'red' : '0x006B54'; // CSU Green or red for selected
-      return `markers=color:${color}|label:${building.name.charAt(0)}|${building.location.latitude},${building.location.longitude}`;
-    }).join('&');
-    
-    // Build the URL
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${center}&zoom=${zoom}&size=${size}&maptype=${mapType}&${markers}&key=${key}`;
+
+    // Create marker parameters for all campus buildings with improved styling
+    const buildingMarkers = buildings
+      .map((bldg) => {
+        const isSelected = selectedBuilding?.id === bldg.id;
+        const color = isSelected ? 'red' : '0x006B54'; // CSU Green or red for selected
+        const size = isSelected ? 'mid' : 'small';
+        const label = bldg.name.charAt(0);
+        return `markers=size:${size}|color:${color}|label:${label}|${bldg.location.latitude},${bldg.location.longitude}`;
+      })
+      .join('&');
+
+    // Extra marker for navigation target (blue) or current tour stop (yellow)
+    const extraMarkers: string[] = [];
+    if (navigationTarget) {
+      extraMarkers.push(
+        `markers=size:large|color:blue|label:D|${navigationTarget.location.latitude},${navigationTarget.location.longitude}`
+      );
+    }
+    if (currentStopObj) {
+      extraMarkers.push(
+        `markers=size:large|color:yellow|label:T|${currentStopObj.location.latitude},${currentStopObj.location.longitude}`
+      );
+    }
+
+    // Build path parameter for active walking route (if any)
+    const pathParam = encodedRoute
+      ? `&path=weight:5|color:0x0000ff|enc:${encodedRoute}`
+      : '';
+
+    // Add styling parameters for a better looking map
+    const mapStyle = mapType === 'satellite' ? 'satellite' : 'roadmap';
+    const styleParams = mapType === 'roadmap' ? '&style=feature:poi|visibility:on&style=feature:transit|visibility:on' : '';
+
+    // Build and return final URL
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${center}&zoom=${zoom}&size=${size}&maptype=${mapStyle}&scale=2${styleParams}&${buildingMarkers}${
+      extraMarkers.length ? '&' + extraMarkers.join('&') : ''
+    }${pathParam}&key=${key}`;
   };
 
   useEffect(() => {
@@ -219,13 +366,76 @@ const ARNavigator = () => {
   };
 
   const selectBuilding = (building: Building) => {
-    setSelectedBuilding(building);
-    setZoomLevel(18); // Zoom in when a building is selected
+    // Fade out first
+    Animated.timing(fadeAnim, {
+      toValue: 0.5,
+      duration: 150,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedBuilding(building);
+      setZoomLevel(18); // Zoom in when a building is selected
+      
+      // Fade back in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+      
+      // Add a slight haptic feedback if available on the device
+      if (Platform.OS === 'ios') {
+        // This would typically use the Haptics API but we're keeping it simple here
+        // You could import Haptics from 'expo-haptics' for full implementation
+      }
+    });
   };
 
   const clearSelectedBuilding = () => {
-    setSelectedBuilding(null);
-    setZoomLevel(16); // Zoom out when clearing selection
+    // Fade out first
+    Animated.timing(fadeAnim, {
+      toValue: 0.7,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedBuilding(null);
+      setZoomLevel(16); // Zoom out when clearing selection
+      
+      // Fade back in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const handleModeChange = (newMode: 'buildings' | 'studyspaces' | 'directions' | 'tour') => {
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setMode(newMode);
+      setActiveFeatures({
+        buildings: newMode === 'buildings',
+        studyspaces: newMode === 'studyspaces',
+        directions: newMode === 'directions',
+        tour: newMode === 'tour'
+      });
+      
+      // Clear selected building when switching modes
+      if (selectedBuilding && newMode !== 'buildings') {
+        clearSelectedBuilding();
+      }
+      
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
   const renderBuildingInfoCard = (building: Building) => {
@@ -347,75 +557,382 @@ const ARNavigator = () => {
     );
   };
 
+  const fetchDirections = async (destination: { latitude: number; longitude: number }) => {
+    if (!userLocation) return;
+
+    const apiKey = 'AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM';
+    const origin = `${userLocation.latitude},${userLocation.longitude}`;
+    const dest = `${destination.latitude},${destination.longitude}`;
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${dest}&mode=walking&key=${apiKey}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const leg = route.legs[0];
+        
+        // Set route overview information
+        setRouteDistance(leg.distance.text);
+        setRouteDuration(leg.duration.text);
+        
+        // Process and set route steps
+        const steps = leg.steps.map((step: any) => ({
+          distance: step.distance.text,
+          duration: step.duration.text,
+          instructions: step.html_instructions.replace(/<[^>]*>/g, ''),
+          maneuver: step.maneuver
+        }));
+        setRouteSteps(steps);
+        setEncodedRoute(route.overview_polyline.points);
+        // Set polyline for map
+        const points = decodePolyline(route.overview_polyline.points);
+        setDirections(points);
+      }
+    } catch (error) {
+      console.error('Error fetching directions:', error);
+      Alert.alert('Error', 'Unable to calculate route. Please try again.');
+      setEncodedRoute(null);
+    }
+  };
+
+  const renderNavigationMode = () => {
+    return (
+      <View style={styles.navigationContainer}>
+        <Text style={styles.navigationTitle}>Campus Navigation</Text>
+        
+        {!navigationTarget ? (
+          <ScrollView style={styles.navigationList}>
+            <Text style={styles.navigationPrompt}>Where would you like to go?</Text>
+            {buildings.map(building => (
+              <TouchableOpacity
+                key={building.id}
+                style={styles.navigationItem}
+                onPress={() => {
+                  setNavigationTarget({
+                    id: building.id,
+                    name: building.name,
+                    type: 'building',
+                    location: building.location
+                  });
+                  fetchDirections(building.location);
+                }}
+              >
+                <View style={styles.navigationItemContent}>
+                  <Ionicons name="business" size={24} color={CSU_GREEN} />
+                  <View style={styles.navigationItemText}>
+                    <Text style={styles.navigationItemTitle}>{building.name}</Text>
+                    <Text style={styles.navigationItemSubtitle}>{building.address}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color={CSU_GREEN} />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.activeNavigationContainer}
+          >
+            <Text style={styles.navigationDestination}>
+              Navigating to: {navigationTarget.name}
+            </Text>
+            <View style={styles.navigationDirections}>
+              <Ionicons name="navigate" size={32} color={CSU_WHITE} />
+              {routeDistance && routeDuration && (
+                <View style={styles.routeOverview}>
+                  <Text style={styles.routeOverviewText}>
+                    {routeDistance} • {routeDuration} walking
+                  </Text>
+                </View>
+              )}
+              <View style={styles.routeSteps}>
+                {routeSteps.map((step, index) => (
+                  <View key={index} style={styles.routeStep}>
+                    <Ionicons 
+                      name={step.maneuver === 'turn-right' ? 'arrow-forward' : 
+                            step.maneuver === 'turn-left' ? 'arrow-back' : 
+                            'arrow-up'} 
+                      size={20} 
+                      color={CSU_WHITE} 
+                    />
+                    <Text style={styles.routeStepText}>{step.instructions}</Text>
+                    <Text style={styles.routeStepDistance}>{step.distance}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.cancelNavigationButton}
+              onPress={() => {
+                setNavigationTarget(null);
+                setRouteSteps([]);
+                setRouteDistance('');
+                setRouteDuration('');
+                setDirections(null);
+                setEncodedRoute(null);
+              }}
+            >
+              <Text style={styles.cancelNavigationText}>Cancel Navigation</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        )}
+      </View>
+    );
+  };
+
+  const renderTourMode = () => {
+    return (
+      <View style={styles.tourContainer}>
+        <Text style={styles.tourTitle}>Campus Tour</Text>
+        
+        {!currentTourStop ? (
+          <View style={styles.tourIntro}>
+            <Text style={styles.tourDescription}>
+              Take a guided tour of Cleveland State University. Visit key locations and learn about our campus history.
+            </Text>
+            <View style={styles.tourDetails}>
+              <Text style={styles.tourLength}>Duration: ~70 minutes</Text>
+              <Text style={styles.tourStops}>4 Stops</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.startTourButton}
+              onPress={() => setCurrentTourStop('stop1')}
+            >
+              <Text style={styles.startTourButtonText}>Start Tour</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.activeTourContainer}>
+            <ScrollView 
+              style={styles.tourStopsList}
+              showsVerticalScrollIndicator={false}
+            >
+              {CSU_TOUR_STOPS.map((stop, index) => (
+                <View 
+                  key={stop.id}
+                  style={[
+                    styles.tourStop,
+                    currentTourStop === stop.id && styles.activeTourStop
+                  ]}
+                >
+                  <View style={styles.tourStopNumber}>
+                    <Text style={styles.tourStopNumberText}>{index + 1}</Text>
+                  </View>
+                  <View style={styles.tourStopContent}>
+                    <Text style={styles.tourStopName}>{stop.name}</Text>
+                    <Text style={styles.tourStopDescription}>{stop.description}</Text>
+                    <Text style={styles.tourStopDuration}>{stop.duration} minutes</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            
+            <View style={styles.tourControls}>
+              <TouchableOpacity
+                style={styles.tourControlButton}
+                onPress={() => {
+                  const currentIndex = CSU_TOUR_STOPS.findIndex(stop => stop.id === currentTourStop);
+                  if (currentIndex > 0) {
+                    setCurrentTourStop(CSU_TOUR_STOPS[currentIndex - 1].id);
+                  }
+                }}
+              >
+                <Ionicons name="chevron-back" size={24} color={CSU_WHITE} />
+                <Text style={styles.tourControlText}>Previous</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.tourControlButton}
+                onPress={() => {
+                  const currentStop = CSU_TOUR_STOPS.find(stop => stop.id === currentTourStop);
+                  if (currentStop?.nextStop) {
+                    setCurrentTourStop(currentStop.nextStop);
+                  }
+                }}
+              >
+                <Text style={styles.tourControlText}>Next</Text>
+                <Ionicons name="chevron-forward" size={24} color={CSU_WHITE} />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.endTourButton}
+              onPress={() => setCurrentTourStop(null)}
+            >
+              <Text style={styles.endTourButtonText}>End Tour</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderModeContent = () => {
+    return (
+      <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
+        {mode === 'buildings' && !selectedBuilding && renderBuildingsList()}
+        {mode === 'buildings' && selectedBuilding && renderBuildingInfoCard(selectedBuilding)}
+        {mode === 'studyspaces' && renderStudySpaces()}
+        {mode === 'directions' && renderNavigationMode()}
+        {mode === 'tour' && renderTourMode()}
+      </Animated.View>
+    );
+  };
+
+  const renderModeButtons = () => (
+    <View style={styles.modeButtons}>
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          mode === 'buildings' && styles.activeModeButton,
+          {
+            transform: [{
+              scale: buttonsLayout.animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, mode === 'buildings' ? 1.1 : 1]
+              })
+            }]
+          }
+        ]}
+        onPress={() => handleModeChange('buildings')}
+      >
+        <View style={styles.modeButtonInner}>
+          <View style={styles.modeButtonIconContainer}>
+            <Ionicons 
+              name="business" 
+              size={32} 
+              color={mode === 'buildings' ? CSU_WHITE : '#E8F5E9'} 
+            />
+          </View>
+          <Text style={[
+            styles.modeButtonText,
+            mode === 'buildings' && styles.activeModeButtonText
+          ]}>Buildings</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          mode === 'studyspaces' && styles.activeModeButton,
+          {
+            transform: [{
+              scale: buttonsLayout.animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, mode === 'studyspaces' ? 1.1 : 1]
+              })
+            }]
+          }
+        ]}
+        onPress={() => handleModeChange('studyspaces')}
+      >
+        <View style={styles.modeButtonInner}>
+          <View style={styles.modeButtonIconContainer}>
+            <Ionicons 
+              name="book" 
+              size={32} 
+              color={mode === 'studyspaces' ? CSU_WHITE : '#E8F5E9'} 
+            />
+          </View>
+          <Text style={[
+            styles.modeButtonText,
+            mode === 'studyspaces' && styles.activeModeButtonText
+          ]}>Study</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          mode === 'directions' && styles.activeModeButton,
+          {
+            transform: [{
+              scale: buttonsLayout.animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, mode === 'directions' ? 1.1 : 1]
+              })
+            }]
+          }
+        ]}
+        onPress={() => handleModeChange('directions')}
+      >
+        <View style={styles.modeButtonInner}>
+          <View style={styles.modeButtonIconContainer}>
+            <Ionicons 
+              name="navigate" 
+              size={32} 
+              color={mode === 'directions' ? CSU_WHITE : '#E8F5E9'} 
+            />
+          </View>
+          <Text style={[
+            styles.modeButtonText,
+            mode === 'directions' && styles.activeModeButtonText
+          ]}>Navigate</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.modeButton,
+          mode === 'tour' && styles.activeModeButton,
+          {
+            transform: [{
+              scale: buttonsLayout.animated.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, mode === 'tour' ? 1.1 : 1]
+              })
+            }]
+          }
+        ]}
+        onPress={() => handleModeChange('tour')}
+      >
+        <View style={styles.modeButtonInner}>
+          <View style={styles.modeButtonIconContainer}>
+            <Ionicons 
+              name="walk" 
+              size={32} 
+              color={mode === 'tour' ? CSU_WHITE : '#E8F5E9'} 
+            />
+          </View>
+          <Text style={[
+            styles.modeButtonText,
+            mode === 'tour' && styles.activeModeButtonText
+          ]}>Tour</Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
   // AR view with static Google Maps
   const renderARView = () => {
-    // IMPORTANT: AR IMPLEMENTATION BEGINS HERE
-    // This section should be replaced with actual AR camera implementation
+    // Create a unique key that will change whenever relevant state changes
+    const mapKey = `${selectedBuilding?.id || ''}-${navigationTarget?.id || ''}-${currentTourStop || ''}-${mapType}-${mode}`;
+    
     return (
-      <View style={styles.arContainer}>
-        {/* Google Maps implementation using Static API */}
+      <View style={[styles.arContainer, { backgroundColor: 'rgba(0, 0, 0, 0.8)' }]}>
+        {/* Add key prop to force re-render when state changes */}
         <Image
+          key={mapKey}
           source={{ uri: getStaticMapUrl() }}
           style={styles.mapImage}
           resizeMode="cover"
         />
-
-        {/* IMPORTANT NOTE: Real AR implementation would replace Image with:
-            1. Camera feed from user's device
-            2. AR overlay to identify buildings in view
-            3. Real-time information about building details
-            4. Custom AR markers for navigation
-        */}
-
+        
+        {/* Add map transition overlay effect */}
+        <Animated.View 
+          style={[
+            styles.mapTransition,
+            { opacity: fadeAnim.interpolate({
+                inputRange: [0, 0.5, 1],
+                outputRange: [0.7, 0.3, 0]
+              })
+            }
+          ]}
+        />
+        
         <View style={styles.arOverlay}>
-          {/* Show different views based on mode */}
-          {mode === 'buildings' && !selectedBuilding && renderBuildingsList()}
-          {mode === 'buildings' && selectedBuilding && renderBuildingInfoCard(selectedBuilding)}
-          
-          {mode === 'studyspaces' && renderStudySpaces()}
-          
-          {mode === 'directions' && (
-            <View style={styles.directionsContainer}>
-              <Text style={styles.directionsTitle}>Directions</Text>
-              <Text style={styles.directionsText}>
-                Select a building on the map to get directions.
-              </Text>
-              <ARNavigatorMap
-                buildings={buildings}
-                selectedBuilding={selectedBuilding}
-                onSelectBuilding={selectBuilding}
-              />
-              {selectedBuilding && (
-                <View style={styles.directionsInfo}>
-                  <Text style={styles.directionsDestination}>
-                    Destination: {selectedBuilding.name}
-                  </Text>
-                  <Text style={styles.directionsAddress}>
-                    {selectedBuilding.address}
-                  </Text>
-                  <TouchableOpacity 
-                    style={styles.closeInfoButton}
-                    onPress={clearSelectedBuilding}
-                  >
-                    <Text style={styles.closeInfoButtonText}>Choose Another Building</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          )}
-          
-          {mode === 'tour' && (
-            <View style={styles.tourContainer}>
-              <Text style={styles.tourTitle}>CSU Campus Tour</Text>
-              <Text style={styles.tourText}>
-                Take a self-guided tour of Cleveland State University. 
-                The tour highlights key buildings and landmarks around campus.
-              </Text>
-              <TouchableOpacity style={styles.tourStartButton}>
-                <Text style={styles.tourStartButtonText}>Start Tour</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          {renderModeContent()}
           
           {/* Map type toggle button */}
           <TouchableOpacity
@@ -436,39 +953,54 @@ const ARNavigator = () => {
             <Ionicons name="close-circle" size={44} color="white" />
           </TouchableOpacity>
           
-          <View style={styles.modeButtons}>
-            <TouchableOpacity
-              style={[styles.modeButton, mode === 'buildings' && styles.activeModeButton]}
-              onPress={() => setMode('buildings')}
-            >
-              <Ionicons name="business" size={24} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.modeButton, mode === 'studyspaces' && styles.activeModeButton]}
-              onPress={() => setMode('studyspaces')}
-            >
-              <Ionicons name="book" size={24} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.modeButton, mode === 'directions' && styles.activeModeButton]}
-              onPress={() => setMode('directions')}
-            >
-              <Ionicons name="navigate" size={24} color="white" />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.modeButton, mode === 'tour' && styles.activeModeButton]}
-              onPress={() => setMode('tour')}
-            >
-              <Ionicons name="walk" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
+          <Animated.View style={[
+            styles.modeButtons,
+            {
+              opacity: buttonsLayout.animated,
+              transform: [{
+                translateY: buttonsLayout.animated.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0]
+                })
+              }]
+            }
+          ]}>
+            {renderModeButtons()}
+          </Animated.View>
         </View>
       </View>
     );
-    // IMPORTANT: AR IMPLEMENTATION ENDS HERE
+  };
+
+  const decodePolyline = (encoded: string) => {
+    let points: { latitude: number; longitude: number }[] = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+    }
+
+    return points;
   };
 
   // Loading state
@@ -605,10 +1137,21 @@ const styles = StyleSheet.create({
   arContainer: {
     flex: 1,
     position: 'relative',
+    padding: 0,
   },
   mapImage: {
     width: '100%',
     height: '100%',
+    borderRadius: 0,
+  },
+  mapTransition: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#000',
+    zIndex: 10,
   },
   arOverlay: {
     position: 'absolute',
@@ -617,6 +1160,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'transparent',
+    zIndex: 20,
   },
   mapTypeButton: {
     position: 'absolute',
@@ -635,89 +1179,141 @@ const styles = StyleSheet.create({
   },
   modeButtons: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 15,
     left: 0,
     right: 0,
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 20,
     zIndex: 100,
   },
   modeButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    height: 60,
-    width: 60,
-    borderRadius: 30,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    height: 65,
+    width: 65,
+    borderRadius: 33,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 5,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  modeButtonInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  modeButtonIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  modeButtonText: {
+    color: '#E8F5E9',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   activeModeButton: {
     backgroundColor: CSU_GREEN,
+    borderColor: CSU_WHITE,
+    borderWidth: 2,
+  },
+  activeModeButtonText: {
+    color: CSU_WHITE,
+    fontWeight: 'bold',
   },
   buildingInfoCard: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 120,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    padding: 20,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   buildingName: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginBottom: 8,
   },
   buildingDetails: {
     color: '#E8F5E9',
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: 16,
+    marginBottom: 12,
   },
   buildingDescription: {
     color: '#E8F5E9',
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: 15,
+    marginBottom: 12,
+    lineHeight: 22,
   },
   buildingAddress: {
     color: '#CCC',
-    fontSize: 12,
-    marginBottom: 4,
+    fontSize: 14,
+    marginBottom: 8,
   },
   buildingYearBuilt: {
     color: '#CCC',
-    fontSize: 12,
-    marginBottom: 12,
+    fontSize: 14,
+    marginBottom: 18,
   },
   closeInfoButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    padding: 8,
-    borderRadius: 5,
+    backgroundColor: CSU_GREEN,
+    padding: 12,
+    borderRadius: 30,
     alignSelf: 'center',
-    marginTop: 8,
+    marginTop: 12,
+    paddingHorizontal: 25,
   },
   closeInfoButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '500',
   },
   studySpacesContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 120,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     borderRadius: 15,
-    padding: 15,
-    maxHeight: 300,
+    padding: 20,
+    maxHeight: 350,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   studySpacesList: {
-    maxHeight: 240,
+    maxHeight: 280,
   },
   sectionTitle: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   studySpaceItem: {
     flexDirection: 'row',
@@ -862,35 +1458,274 @@ const styles = StyleSheet.create({
   },
   tourContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 140,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.85)',
     borderRadius: 15,
-    padding: 15,
+    padding: 16,
+    maxHeight: '50%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
   },
   tourTitle: {
-    color: 'white',
+    color: CSU_WHITE,
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
-  tourText: {
-    color: '#E8F5E9',
-    fontSize: 14,
-    marginBottom: 20,
+  tourIntro: {
+    alignItems: 'center',
   },
-  tourStartButton: {
+  tourDescription: {
+    color: CSU_WHITE,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  tourDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 15,
+  },
+  tourLength: {
+    color: CSU_WHITE,
+    fontSize: 13,
+  },
+  tourStops: {
+    color: CSU_WHITE,
+    fontSize: 13,
+  },
+  startTourButton: {
     backgroundColor: CSU_GREEN,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
     borderRadius: 20,
+  },
+  startTourButtonText: {
+    color: CSU_WHITE,
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  activeTourContainer: {
+    flex: 1,
+  },
+  tourStopsList: {
+    maxHeight: 200,
+  },
+  tourStop: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    marginBottom: 10,
+    padding: 12,
+  },
+  activeTourStop: {
+    backgroundColor: CSU_GREEN,
+  },
+  tourStopNumber: {
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  tourStopNumberText: {
+    color: CSU_WHITE,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  tourStopContent: {
+    flex: 1,
+  },
+  tourStopName: {
+    color: CSU_WHITE,
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 3,
+  },
+  tourStopDescription: {
+    color: '#E8F5E9',
+    fontSize: 13,
+    marginBottom: 3,
+    lineHeight: 18,
+  },
+  tourStopDuration: {
+    color: '#CCC',
+    fontSize: 11,
+  },
+  tourControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  tourControlButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+  },
+  tourControlText: {
+    color: CSU_WHITE,
+    fontSize: 13,
+    marginHorizontal: 4,
+  },
+  endTourButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 15,
     alignSelf: 'center',
   },
-  tourStartButtonText: {
-    color: 'white',
+  endTourButtonText: {
+    color: CSU_WHITE,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  navigationContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    borderRadius: 20,
+    padding: 20,
+    margin: 15,
+    marginBottom: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  navigationTitle: {
+    color: CSU_WHITE,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+  navigationList: {
+    maxHeight: 500,
+  },
+  navigationPrompt: {
+    color: CSU_WHITE,
+    fontSize: 18,
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+  navigationItem: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 15,
+    marginBottom: 15,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  navigationItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+  },
+  navigationItemText: {
+    flex: 1,
+    marginLeft: 15,
+    marginRight: 10,
+  },
+  navigationItemTitle: {
+    color: CSU_WHITE,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  navigationItemSubtitle: {
+    color: '#CCC',
+    fontSize: 14,
+  },
+  activeNavigationContainer: {
+    alignItems: 'center',
+    padding: 25,
+  },
+  navigationDestination: {
+    color: CSU_WHITE,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+  navigationDirections: {
+    alignItems: 'center',
+    marginBottom: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 20,
+    borderRadius: 15,
+    width: '100%',
+  },
+  navigationDistance: {
+    color: CSU_WHITE,
+    fontSize: 18,
+    marginTop: 15,
+    fontWeight: '500',
+  },
+  cancelNavigationButton: {
+    backgroundColor: CSU_GREEN,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  cancelNavigationText: {
+    color: CSU_WHITE,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  routeOverview: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 15,
+    marginBottom: 20,
+    width: '100%',
+  },
+  routeOverviewText: {
+    color: CSU_WHITE,
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  routeSteps: {
+    width: '100%',
+    gap: 15,
+  },
+  routeStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 15,
+    borderRadius: 10,
+    gap: 10,
+  },
+  routeStepText: {
+    color: CSU_WHITE,
+    fontSize: 14,
+    flex: 1,
+  },
+  routeStepDistance: {
+    color: '#CCC',
+    fontSize: 12,
   },
 });
 

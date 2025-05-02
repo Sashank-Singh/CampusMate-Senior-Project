@@ -18,8 +18,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
       "bundleIdentifier": "com.campusmate.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to upload your schedule.",
         "NSPhotoLibraryUsageDescription": "This app needs photo library access to upload your schedule.",
@@ -31,7 +32,8 @@
               "campusmate"
             ]
           }
-        ]
+        ],
+        "UIBackgroundModes": ["location", "fetch"]
       },
       "config": {
         "googleMapsApiKey": "AIzaSyDzoRCeNKfH2aQcDkiVpSZC4S4NbJzToDM"
@@ -90,7 +92,7 @@
       "eas": {
         "projectId": "238e8131-a854-44cd-9cc7-f97c3273b809"
       },
-      "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
+      "EXPO_PUBLIC_OPENROUTER_API_KEY": "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"
     },
     "plugins": [
       "expo-font",
@@ -118,5 +120,14 @@
       "android"
     ],
     "newArchEnabled": false
+  },
+  "build": {
+    "production": {
+      "distribution": "store",
+      "ios": {
+        "providerId": "apple",
+        "buildConfiguration": "Release"
+      }
+    }
   }
 }

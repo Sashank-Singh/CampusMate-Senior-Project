@@ -11,10 +11,13 @@ import {
   SafeAreaView,
   FlatList,
   Platform,
+  Switch,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import BlackboardIntegration from "../components/BlackboardIntegration";
 
 // Import local images
 const images = {
@@ -35,6 +38,34 @@ const AcademicsExchange = () => {
   const [addItemModalVisible, setAddItemModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // New state variables for editable academic data
+  const [academicModalVisible, setAcademicModalVisible] = useState(false);
+  const [progressModalVisible, setProgressModalVisible] = useState(false);
+  const [addCourseModalVisible, setAddCourseModalVisible] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  
+  // Editable academic overview data
+  const [academicData, setAcademicData] = useState({
+    gpa: "3.78",
+    totalCredits: 120,
+    earnedCredits: 65,
+    currentCourses: 4,
+    semester: "Spring 2025",
+    standing: "Good Standing",
+    nextDeadline: "Midterm Exam - May 10, 2025"
+  });
+  
+  // Form for adding/editing courses
+  const [courseForm, setCourseForm] = useState({
+    code: "",
+    title: "",
+    progress: "0",
+    credits: "3",
+    difficulty: "Medium",
+    recommendedStudyHours: "6",
+    nextDeadline: ""
+  });
 
   // Form state for adding new listings
   const [newItemForm, setNewItemForm] = useState({
@@ -44,8 +75,18 @@ const AcademicsExchange = () => {
     category: "items", // Default category
   });
 
-  // Academic Progress Data
-  const courses = [
+  // Editable degree progress
+  const [degreeProgress, setDegreeProgress] = useState({
+    totalCredits: 120,
+    completedCredits: 65,
+    requiredCourses: 18,
+    completedRequiredCourses: 12,
+    electiveCourses: 10,
+    completedElectiveCourses: 6,
+  });
+
+  // Academic Progress Data - Make it editable
+  const [courses, setCourses] = useState([
     {
       id: 1,
       code: "CS101",
@@ -90,17 +131,7 @@ const AcademicsExchange = () => {
       nextDeadline: "Problem Set #5 - May 12, 2025",
       image: images.physics,
     },
-  ];
-
-  // Degree Requirements
-  const degreeProgress = {
-    totalCredits: 120,
-    completedCredits: 65,
-    requiredCourses: 18,
-    completedRequiredCourses: 12,
-    electiveCourses: 10,
-    completedElectiveCourses: 6,
-  };
+  ]);
 
   // Skill Exchange Data
   const [exchangeItems, setExchangeItems] = useState({
@@ -264,13 +295,141 @@ const AcademicsExchange = () => {
     ),
   };
 
+  // Now add the edit functions
+  const editAcademicData = () => {
+    setAcademicModalVisible(true);
+  };
+
+  const editDegreeProgress = () => {
+    setProgressModalVisible(true);
+  };
+
+  const addCourse = () => {
+    setCourseForm({
+      code: "",
+      title: "",
+      progress: "0",
+      credits: "3",
+      difficulty: "Medium",
+      recommendedStudyHours: "6",
+      nextDeadline: ""
+    });
+    setEditingCourse(null);
+    setAddCourseModalVisible(true);
+  };
+
+  const editCourse = (course: any) => {
+    setCourseForm({
+      code: course.code,
+      title: course.title,
+      progress: (course.progress * 100).toString(),
+      credits: course.credits.toString(),
+      difficulty: course.difficulty,
+      recommendedStudyHours: course.recommendedStudyHours.toString(),
+      nextDeadline: course.nextDeadline
+    });
+    setEditingCourse(course);
+    setAddCourseModalVisible(true);
+  };
+
+  const saveCourse = () => {
+    const newCourse = {
+      id: editingCourse ? editingCourse.id : Math.max(0, ...courses.map(c => c.id)) + 1,
+      code: courseForm.code,
+      title: courseForm.title,
+      progress: parseFloat(courseForm.progress) / 100,
+      credits: parseInt(courseForm.credits),
+      difficulty: courseForm.difficulty,
+      recommendedStudyHours: parseInt(courseForm.recommendedStudyHours),
+      nextDeadline: courseForm.nextDeadline,
+      image: editingCourse ? editingCourse.image : images.computer_science,
+    };
+
+    if (editingCourse) {
+      // Update existing course
+      setCourses(courses.map(c => c.id === editingCourse.id ? newCourse : c));
+    } else {
+      // Add new course
+      setCourses([...courses, newCourse]);
+      // Update current courses count
+      setAcademicData({
+        ...academicData,
+        currentCourses: academicData.currentCourses + 1
+      });
+    }
+    setAddCourseModalVisible(false);
+  };
+  
+  const deleteCourse = (courseId: number) => {
+    setCourses(courses.filter(c => c.id !== courseId));
+    setAcademicData({
+      ...academicData,
+      currentCourses: academicData.currentCourses - 1
+    });
+    setAddCourseModalVisible(false);
+  };
+
   const renderAcademicsContent = () => (
     <ScrollView>
-      {/* Blackboard Integration */}
-      <BlackboardIntegration />
+      {/* Manual Academic Progress with Edit Button */}
+      <View style={styles.academicSummaryCard}>
+        <View style={styles.academicHeaderRow}>
+          <View style={styles.academicIconContainer}>
+            <Ionicons name="school" size={24} color="#4CAF50" />
+          </View>
+          <Text style={styles.academicHeaderText}>Academic Overview</Text>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={editAcademicData}
+          >
+            <Ionicons name="create-outline" size={22} color="#4CAF50" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.academicStatsRow}>
+          <View style={styles.academicStatItem}>
+            <Text style={styles.academicStatValue}>{academicData.gpa}</Text>
+            <Text style={styles.academicStatLabel}>GPA</Text>
+          </View>
+          <View style={styles.academicStatItem}>
+            <Text style={styles.academicStatValue}>{academicData.earnedCredits}/{academicData.totalCredits}</Text>
+            <Text style={styles.academicStatLabel}>Credits</Text>
+          </View>
+          <View style={styles.academicStatItem}>
+            <Text style={styles.academicStatValue}>{academicData.currentCourses}</Text>
+            <Text style={styles.academicStatLabel}>Current Courses</Text>
+          </View>
+        </View>
+        
+        <View style={styles.academicInfoRow}>
+          <View style={styles.academicInfoItem}>
+            <Text style={styles.academicInfoLabel}>Semester:</Text>
+            <Text style={styles.academicInfoValue}>{academicData.semester}</Text>
+          </View>
+          <View style={styles.academicInfoItem}>
+            <Text style={styles.academicInfoLabel}>Status:</Text>
+            <Text style={styles.academicInfoValue}>{academicData.standing}</Text>
+          </View>
+        </View>
+        
+        <View style={styles.academicCalendarRow}>
+          <Ionicons name="calendar" size={20} color="#4CAF50" />
+          <Text style={styles.academicCalendarText}>
+            Next deadline: {academicData.nextDeadline}
+          </Text>
+        </View>
+      </View>
 
       <View style={styles.summaryContainer}>
-        <Text style={styles.sectionTitle}>Degree Progress</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Degree Progress</Text>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={editDegreeProgress}
+          >
+            <Ionicons name="create-outline" size={22} color="#4CAF50" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.progressContainer}>
           <Text>
             Total Credits: {degreeProgress.completedCredits}/
@@ -331,34 +490,61 @@ const AcademicsExchange = () => {
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Current Courses</Text>
-      {filteredCourses.map((course) => (
-        <TouchableOpacity
-          key={course.id}
-          onPress={() => openModal(course)}
-          style={styles.card}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={styles.sectionTitle}>Current Courses</Text>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={addCourse}
         >
-          <LinearGradient
-            colors={["#ffffff", "#f5f5f5"]}
-            style={styles.cardGradient}
-          >
-            <View style={styles.iconContainer}>
-              <Ionicons name="book" size={32} color="#4CAF50" />
-            </View>
-            <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>
-                {course.code}: {course.title}
-              </Text>
-              <Text style={styles.cardDescription}>
-                Progress: {Math.round(course.progress * 100)}% | Difficulty:{" "}
-                {course.difficulty} | Study: {course.recommendedStudyHours}{" "}
-                hrs/week
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#757575" />
-          </LinearGradient>
+          <Ionicons name="add-circle" size={24} color="#4CAF50" />
         </TouchableOpacity>
-      ))}
+      </View>
+      
+      {filteredCourses.length === 0 ? (
+        <View style={styles.emptyCoursesContainer}>
+          <Ionicons name="book" size={48} color="#E0E0E0" />
+          <Text style={styles.emptyCoursesText}>No courses found</Text>
+          <TouchableOpacity 
+            style={styles.addCourseButton}
+            onPress={addCourse}
+          >
+            <Text style={styles.addCourseButtonText}>Add Your First Course</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        filteredCourses.map((course) => (
+          <TouchableOpacity
+            key={course.id}
+            onPress={() => openModal(course)}
+            style={styles.card}
+          >
+            <LinearGradient
+              colors={["#ffffff", "#f5f5f5"]}
+              style={styles.cardGradient}
+            >
+              <View style={styles.iconContainer}>
+                <Ionicons name="book" size={32} color="#4CAF50" />
+              </View>
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>
+                  {course.code}: {course.title}
+                </Text>
+                <Text style={styles.cardDescription}>
+                  Progress: {Math.round(course.progress * 100)}% | Difficulty:{" "}
+                  {course.difficulty} | Study: {course.recommendedStudyHours}{" "}
+                  hrs/week
+                </Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => editCourse(course)}
+                style={styles.editIconButton}
+              >
+                <Ionicons name="create-outline" size={24} color="#757575" />
+              </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
+        ))
+      )}
     </ScrollView>
   );
 
@@ -708,6 +894,362 @@ const AcademicsExchange = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Academic Overview Edit Modal */}
+      <Modal visible={academicModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Edit Academic Overview</Text>
+
+                <Text style={styles.formLabel}>GPA</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={academicData.gpa}
+                  onChangeText={(text) => setAcademicData({ ...academicData, gpa: text })}
+                  keyboardType="decimal-pad"
+                />
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Earned Credits</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={academicData.earnedCredits.toString()}
+                      onChangeText={(text) => 
+                        setAcademicData({ ...academicData, earnedCredits: parseInt(text) || 0 })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Total Credits</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={academicData.totalCredits.toString()}
+                      onChangeText={(text) =>
+                        setAcademicData({ ...academicData, totalCredits: parseInt(text) || 0 })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.formLabel}>Semester</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={academicData.semester}
+                  onChangeText={(text) => setAcademicData({ ...academicData, semester: text })}
+                />
+
+                <Text style={styles.formLabel}>Academic Standing</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={academicData.standing}
+                  onChangeText={(text) => setAcademicData({ ...academicData, standing: text })}
+                />
+
+                <Text style={styles.formLabel}>Next Deadline</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={academicData.nextDeadline}
+                  onChangeText={(text) => setAcademicData({ ...academicData, nextDeadline: text })}
+                />
+
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    onPress={() => setAcademicModalVisible(false)}
+                    style={styles.secondaryButton}
+                  >
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setAcademicModalVisible(false)}
+                    style={styles.primaryButton}
+                  >
+                    <Text style={styles.buttonText}>Save Changes</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Degree Progress Edit Modal */}
+      <Modal visible={progressModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Edit Degree Progress</Text>
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Completed Credits</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.completedCredits.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          completedCredits: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Total Credits</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.totalCredits.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          totalCredits: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Completed Required</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.completedRequiredCourses.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          completedRequiredCourses: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Total Required</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.requiredCourses.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          requiredCourses: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Completed Electives</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.completedElectiveCourses.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          completedElectiveCourses: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Total Electives</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={degreeProgress.electiveCourses.toString()}
+                      onChangeText={(text) =>
+                        setDegreeProgress({
+                          ...degreeProgress,
+                          electiveCourses: parseInt(text) || 0,
+                        })
+                      }
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    onPress={() => setProgressModalVisible(false)}
+                    style={styles.secondaryButton}
+                  >
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => setProgressModalVisible(false)}
+                    style={styles.primaryButton}
+                  >
+                    <Text style={styles.buttonText}>Save Changes</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Add/Edit Course Modal */}
+      <Modal visible={addCourseModalVisible} transparent animationType="slide">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>
+                  {editingCourse ? "Edit Course" : "Add New Course"}
+                </Text>
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Course Code</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={courseForm.code}
+                      onChangeText={(text) => setCourseForm({ ...courseForm, code: text })}
+                      placeholder="E.g. CS101"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Credits</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={courseForm.credits}
+                      onChangeText={(text) => setCourseForm({ ...courseForm, credits: text })}
+                      keyboardType="number-pad"
+                      placeholder="3"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.formLabel}>Course Title</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={courseForm.title}
+                  onChangeText={(text) => setCourseForm({ ...courseForm, title: text })}
+                  placeholder="Introduction to Computer Science"
+                />
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Difficulty</Text>
+                    <View style={styles.pickerContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.difficultyButton,
+                          courseForm.difficulty === "Low" && styles.activeDifficultyButton,
+                        ]}
+                        onPress={() => setCourseForm({ ...courseForm, difficulty: "Low" })}
+                      >
+                        <Text style={courseForm.difficulty === "Low" ? styles.activeDifficultyText : {}}>Low</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.difficultyButton,
+                          courseForm.difficulty === "Medium" && styles.activeDifficultyButton,
+                        ]}
+                        onPress={() => setCourseForm({ ...courseForm, difficulty: "Medium" })}
+                      >
+                        <Text style={courseForm.difficulty === "Medium" ? styles.activeDifficultyText : {}}>Medium</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.difficultyButton,
+                          courseForm.difficulty === "High" && styles.activeDifficultyButton,
+                        ]}
+                        onPress={() => setCourseForm({ ...courseForm, difficulty: "High" })}
+                      >
+                        <Text style={courseForm.difficulty === "High" ? styles.activeDifficultyText : {}}>High</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.formRow}>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Study Hours/Week</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={courseForm.recommendedStudyHours}
+                      onChangeText={(text) => setCourseForm({ ...courseForm, recommendedStudyHours: text })}
+                      keyboardType="number-pad"
+                      placeholder="6"
+                    />
+                  </View>
+                  <View style={styles.formColumn}>
+                    <Text style={styles.formLabel}>Progress (%)</Text>
+                    <TextInput
+                      style={styles.formInput}
+                      value={courseForm.progress}
+                      onChangeText={(text) => setCourseForm({ ...courseForm, progress: text })}
+                      keyboardType="number-pad"
+                      placeholder="0-100"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.formLabel}>Next Deadline</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={courseForm.nextDeadline}
+                  onChangeText={(text) => setCourseForm({ ...courseForm, nextDeadline: text })}
+                  placeholder="E.g. Assignment #3 - May 15, 2025"
+                />
+
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    onPress={() => setAddCourseModalVisible(false)}
+                    style={styles.secondaryButton}
+                  >
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  {editingCourse && (
+                    <TouchableOpacity
+                      onPress={() => deleteCourse(editingCourse.id)}
+                      style={styles.deleteButton}
+                    >
+                      <Text style={styles.buttonText}>Delete</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    onPress={saveCourse}
+                    style={[
+                      styles.primaryButton,
+                      (!courseForm.code || !courseForm.title) && styles.disabledButton,
+                    ]}
+                    disabled={!courseForm.code || !courseForm.title}
+                  >
+                    <Text style={styles.buttonText}>
+                      {editingCourse ? "Update Course" : "Add Course"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -984,6 +1526,165 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: "#757575",
+  },
+  academicSummaryCard: {
+    backgroundColor: "white",
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+  },
+  academicHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  academicIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E8F5E9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  academicHeaderText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#424242",
+  },
+  academicStatsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  academicStatItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  academicStatValue: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginBottom: 4,
+  },
+  academicStatLabel: {
+    fontSize: 12,
+    color: "#757575",
+  },
+  academicInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  academicInfoItem: {
+    flex: 1,
+  },
+  academicInfoLabel: {
+    fontSize: 13,
+    color: "#757575",
+    marginBottom: 2,
+  },
+  academicInfoValue: {
+    fontSize: 15,
+    color: "#424242",
+    fontWeight: "500",
+  },
+  academicCalendarRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+    borderRadius: 8,
+  },
+  academicCalendarText: {
+    marginLeft: 8,
+    color: "#424242",
+    fontSize: 14,
+  },
+  editButton: {
+    padding: 5,
+    marginLeft: 'auto',
+  },
+  addButton: {
+    padding: 5,
+  },
+  emptyCoursesContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    padding: 40,
+    borderRadius: 10,
+    marginVertical: 20,
+  },
+  emptyCoursesText: {
+    fontSize: 16,
+    color: "#757575",
+    marginTop: 15,
+    marginBottom: 20,
+  },
+  addCourseButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  addCourseButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  formRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
+  },
+  formColumn: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  pickerContainer: {
+    flexDirection: "row",
+    marginTop: 5,
+  },
+  difficultyButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 5,
+    marginHorizontal: 2,
+    alignItems: "center",
+  },
+  activeDifficultyButton: {
+    backgroundColor: "#4CAF50",
+  },
+  activeDifficultyText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  deleteButton: {
+    backgroundColor: "#F44336",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  editIconButton: {
+    padding: 8,
   },
 });
 

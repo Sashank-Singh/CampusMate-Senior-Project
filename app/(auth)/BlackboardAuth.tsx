@@ -13,7 +13,14 @@ import {
 import { WebView } from "react-native-webview";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import BlackboardService from "../services/BlackboardService";
+import axios from "axios";
+
+const BLACKBOARD_AUTH_URL =
+  "https://bb-csuohio.blackboard.com/learn/api/public/v1/oauth2/authorizationcode";
+const BLACKBOARD_TOKEN_URL =
+  "https://bb-csuohio.blackboard.com/learn/api/public/v1/oauth2/token";
+const CLIENT_ID = "72bc131c-0998-4cda-8e67-52d0e86d9557"; // Replace with actual Client ID
+const REDIRECT_URI = "campusmate://auth/callback";
 
 export default function BlackboardAuth() {
   const navigation = useNavigation();

@@ -83,35 +83,46 @@ const CoursesScreen = () => {
       
       // Prepare the prompt for the vision model with emphasis on day extraction
       const prompt = `
-        You are a university course schedule analyzer. Look at this schedule image and extract all courses shown.
-        
-        For each course, extract:
-        1. Course code and section number (e.g., "ENGR 1100.15 - 406")
-        2. Course type (e.g., "Lecture", "Recitation", "Laboratory")
-        3. Time (e.g., "10:20AM - 11:15AM")
-        4. Days of the week when the course meets (Monday, Tuesday, Wednesday, Thursday, or Friday)
-        5. Location (e.g., "Scott Lab E001")
-        
-        IMPORTANT: You must determine which days each course meets. Usually, the schedule is organized with columns representing days of the week (Monday through Friday).
-        
-        Format your response as a JSON array of course objects with these properties:
-        - title (course code and section)
-        - type (lecture/lab/recitation)
-        - time (time range only, without days)
-        - days (array of weekdays the course meets, e.g. ["Monday", "Wednesday"])
-        - location (building and room)
-        
-        Return only valid JSON. Example format:
-        [
-          {
-            "title": "MATH 1151 - 0080",
-            "type": "Lecture", 
-            "time": "1:50PM - 2:45PM",
-            "days": ["Monday", "Wednesday", "Friday"],
-            "location": "Stillman Hall 100"
-          }
-        ]
+      You are a university course schedule analyzer. Given a schedule image with a weekly timetable, extract all courses shown accurately.
+
+      **Schedule Format Information:**
+      - The image is structured as 8 columns, each representing a day of the week.
+      - The columns are ordered from **left to right** as: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", (extra column)].
+      - Only consider columns for **Monday through Friday**. Ignore the last two columns (Saturday and Sunday).
+      - Each cell in the columns contains information about a course scheduled on that day.
+
+      **For each course, extract the following:**
+      1. **Course code and section** (e.g., "ENGR 1100.15 - 406")
+      2. **Course type** (e.g., "Lecture", "Recitation", "Laboratory")
+      3. **Time range** (e.g., "10:20AM - 11:15AM")
+      4. **Days of the week** the course meets (detect which days it appears in the columns for Monday through Friday)
+      5. **Location** (e.g., "Scott Lab E001")
+
+      **IMPORTANT:**
+      - Courses can appear on **multiple days**. You must track and merge information so that a course is only listed once, with all relevant days included.
+      - Carefully analyze each weekday column (Monday to Friday) to ensure no scheduled course is missed.
+      - Include **Thursday and Friday** even if they contain fewer courses.
+
+      **Return Format:**
+      Respond with only valid JSON: a JSON array of course objects, each with these properties:
+      - "title" (string) — course code and section
+      - "type" (string) — lecture/lab/recitation
+      - "time" (string) — time range (no day)
+      - "days" (array of strings) — weekdays this course meets (e.g., ["Monday", "Wednesday"])
+      - "location" (string) — location string like "Stillman Hall 100"
+
+      **Example:**
+      [
+        {
+          "title": "MATH 1151 - 0080",
+          "type": "Lecture", 
+          "time": "1:50PM - 2:45PM",
+          "days": ["Monday", "Wednesday", "Friday"],
+          "location": "Stillman Hall 100"
+        }
+      ]
       `;
+
       
       try {
         // Make request to OpenRouter API

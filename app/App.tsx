@@ -18,6 +18,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import BlackboardAuth from "./(auth)/BlackboardAuth";
 import CampusEventsScreen from "./(tabs)/CampusEvents";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CampusEvents from "./(tabs)/CampusEvents";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
